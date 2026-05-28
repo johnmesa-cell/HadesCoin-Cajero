@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hadescoin"
+    namespace = "com.example.hadescoin.cajero"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.hadescoin"
+        applicationId = "com.example.hadescoin.cajero"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
