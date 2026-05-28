@@ -1,0 +1,24 @@
+{
+  "users": {
+    "{userId}": {
+      "id": "string",
+      "name": "string",
+      "documentNumber": "string",
+      "phone": "string",
+      "pin": "string",
+      "balance": 0.0,
+      "createdAt": "timestamp"
+    }
+  },
+  "transactions": {
+    "{transactionId}": {
+      "id": "string",
+      "senderId": "string",
+      "receiverId": "string",
+      "amount": 0.0,
+      "type": "TRANSFER | DEPOSIT | WITHDRAW | PAYMENT",
+      "direction": "IN | OUT",
+      "timestamp": "timestamp"
+    }
+  }
+}

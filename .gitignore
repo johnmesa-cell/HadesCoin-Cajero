@@ -1,0 +1,52 @@
+# ── Gradle ────────────────────────────────────────────────────────────────────
+*.iml
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ── Configuración local (nunca al repo) ───────────────────────────────────────
+local.properties
+
+# ── Android Studio / IntelliJ ─────────────────────────────────────────────────
+.idea/
+*.ipr
+*.iws
+
+# ── Archivos generados por Android Studio ─────────────────────────────────────
+captures/
+.externalNativeBuild/
+.cxx/
+.navigation/
+
+# ── Kotlin ────────────────────────────────────────────────────────────────────
+*.kotlin_module
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+
+# ── Archivos del sistema operativo ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Keystores / firmas (seguridad) ────────────────────────────────────────────
+*.jks
+*.keystore
+
+# ── Outputs de compilación ────────────────────────────────────────────────────
+*.apk
+*.ap_
+*.aab
+
+# ── Firebase / Google Services ────────────────────────────────────────────────
+# Contiene claves privadas — NUNCA subir al repositorio
+google-services.json
+
+# ── Archivos temporales ───────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.swp
+*~
+
+# ── Profiling de Android ──────────────────────────────────────────────────────
+*.hprof

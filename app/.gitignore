@@ -1,0 +1,31 @@
+# ── Build ───────────────────────────────────────────────────────────────────
+/build
+
+# ── Firebase / Google Services ──────────────────────────────────────────────
+# Contiene claves privadas — NUNCA subir al repositorio
+google-services.json
+
+# ── Archivos del sistema operativo ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Keystores / firmas (seguridad) ──────────────────────────────────────────
+*.jks
+*.keystore
+
+# ── Outputs de compilación ──────────────────────────────────────────────────
+*.apk
+*.ap_
+*.aab
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+
+# ── Archivos temporales ──────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.swp
+*~
+
+# ── Profiling de Android ───────────────────────────────────────────────────
+*.hprof
