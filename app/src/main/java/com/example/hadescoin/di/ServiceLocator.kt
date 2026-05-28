@@ -6,8 +6,6 @@ import com.example.hadescoin.data.repository.AuthRepositoryImpl
 import com.example.hadescoin.data.repository.WalletRepositoryImpl
 import com.example.hadescoin.domain.usecase.GetWalletDataUseCase
 import com.example.hadescoin.domain.usecase.LoginUseCase
-import com.example.hadescoin.domain.usecase.RegisterUseCase
-import com.example.hadescoin.domain.usecase.TransferUseCase
 
 object ServiceLocator {
 
@@ -18,7 +16,5 @@ object ServiceLocator {
     private val walletRepository by lazy { WalletRepositoryImpl(firebaseUserDataSource, firebaseTransactionDataSource) }
 
     fun provideLoginUseCase(): LoginUseCase = LoginUseCase(authRepository)
-    fun provideRegisterUseCase(): RegisterUseCase = RegisterUseCase(authRepository)
     fun provideGetWalletDataUseCase(): GetWalletDataUseCase = GetWalletDataUseCase(walletRepository)
-    fun provideTransferUseCase(): TransferUseCase = TransferUseCase(walletRepository)
 }

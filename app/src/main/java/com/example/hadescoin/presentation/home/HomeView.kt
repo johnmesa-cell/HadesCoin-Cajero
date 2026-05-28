@@ -80,9 +80,9 @@ fun HomeView(
         onLogout       = {
             navController.navigate("login") { popUpTo(0) { inclusive = true } }
         },
-        onTransfer     = {
+        onAtm          = {
             menuExpanded = false
-            navController.navigate("transfer/$phoneNumber")
+            navController.navigate("atm/$phoneNumber")
         }
     )
 
@@ -107,7 +107,7 @@ fun HomeViewContent(
     onMenuCollapse: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onTransfer: () -> Unit = {}
+    onAtm: () -> Unit = {}
 ) {
     var showUserPanel by remember { mutableStateOf(false) }
     var saldoVisible  by remember { mutableStateOf(true) }
@@ -118,31 +118,22 @@ fun HomeViewContent(
 
     val speedDialItems = listOf(
         SpeedDialItem(
-            label   = stringResource(R.string.action_transfer),
-            icon    = Icons.Filled.SwapHoriz,
-            color   = HadesCyan,
-            onClick = { onTransfer() }
-        ),
-        SpeedDialItem(
             label   = stringResource(R.string.action_deposit),
             icon    = Icons.Filled.ArrowDownward,
             color   = HadesCyan,
-            onClick = {},
-            enabled = false
+            onClick = { onAtm() }
         ),
         SpeedDialItem(
             label   = stringResource(R.string.action_withdraw),
             icon    = Icons.Filled.ArrowUpward,
             color   = HadesOrange,
-            onClick = {},
-            enabled = false
+            onClick = { onAtm() }
         ),
         SpeedDialItem(
             label   = stringResource(R.string.action_pay),
             icon    = Icons.Filled.CreditCard,
             color   = HadesPurple,
-            onClick = {},
-            enabled = false
+            onClick = { onAtm() }
         )
     )
 
@@ -178,7 +169,7 @@ fun HomeViewContent(
 
                 item {
                     HadesFilterChipRow(
-                        opciones       = listOf("TODOS", "TRANSFER", "DEPOSIT", "WITHDRAW"),
+                        opciones       = listOf("TODOS", "DEPOSIT", "WITHDRAW", "PAYMENT"),
                         seleccionado   = filtroActivo,
                         onSeleccion    = { filtroActivo = it },
                         labelTransform = { translateTransactionType(it) }
@@ -407,7 +398,7 @@ private fun TransactionRow(tx: WalletTransaction) {
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(text = typeLabel,                fontSize = 14.sp, fontWeight = FontWeight.Bold,  color = HadesOnDark)
+                Text(text = typeLabel,                    fontSize = 14.sp, fontWeight = FontWeight.Bold,  color = HadesOnDark)
                 Text(text = formatTimestamp(tx.timestamp), fontSize = 11.sp, color = HadesOnDark.copy(alpha = 0.45f))
             }
         }
@@ -493,8 +484,7 @@ fun HomeViewFilledPreview() {
             transactions = listOf(
                 WalletTransaction(type = "DEPOSIT",  amount = 500.0,  direction = "IN",  timestamp = "2026-05-21T10:00:00Z"),
                 WalletTransaction(type = "WITHDRAW", amount = 50.25,  direction = "OUT", timestamp = "2026-05-20T08:00:00Z"),
-                WalletTransaction(type = "TRANSFER", amount = 200.0,  direction = "OUT", timestamp = "2026-05-19T15:00:00Z"),
-                WalletTransaction(type = "TRANSFER", amount = 150.0,  direction = "IN",  timestamp = "2026-05-18T11:00:00Z")
+                WalletTransaction(type = "PAYMENT",  amount = 120.0,  direction = "OUT", timestamp = "2026-05-19T15:00:00Z")
             ),
             cargando = false
         )
