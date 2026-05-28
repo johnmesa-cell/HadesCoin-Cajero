@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hadescoin.cajero"
+    namespace = "com.example.hadescoin"
     compileSdk = 36
 
     defaultConfig {
