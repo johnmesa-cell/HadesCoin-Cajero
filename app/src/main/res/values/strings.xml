@@ -3,7 +3,7 @@
     <!-- ══════════════════════════════════════════════
          APP
     ══════════════════════════════════════════════ -->
-    <string name="app_name">HadesCoin</string>
+    <string name="app_name">HadesCoin Cajero</string>
 
 
     <!-- ══════════════════════════════════════════════
@@ -19,8 +19,8 @@
     <!-- ══════════════════════════════════════════════
          LOGIN — Pantalla de inicio de sesión
     ══════════════════════════════════════════════ -->
-    <string name="login_title">HADESCOIN</string>
-    <string name="login_subtitle">// TU BILLETERA DEL FUTURO</string>
+    <string name="login_title">HADESCOIN CAJERO</string>
+    <string name="login_subtitle">// CAJERO AUTOMÁTICO</string>
     <string name="login_section_header">&gt; INICIAR SESIÓN</string>
     <string name="label_phone_number">Número de teléfono</string>
     <string name="label_pin">PIN de 4 dígitos</string>
@@ -52,7 +52,7 @@
     <!-- ══════════════════════════════════════════════
          HOME — Pantalla principal / billetera
     ══════════════════════════════════════════════ -->
-    <string name="home_app_label">HADESCOIN</string>
+    <string name="home_app_label">HADESCOIN CAJERO</string>
     <string name="home_greeting">Hola, %s</string>
     <string name="home_no_data">…</string>
     <string name="home_movements_header">&gt; MOVIMIENTOS</string>
@@ -65,7 +65,7 @@
     <string name="label_incomes">INGRESOS</string>
     <string name="label_expenses">EGRESOS</string>
     <string name="cd_refresh">Actualizar</string>
-    <string name="cd_logo">HadesCoin Logo</string>
+    <string name="cd_logo">HadesCoin Cajero Logo</string>
     <string name="btn_logout">Cerrar sesión</string>
 
 
@@ -108,5 +108,22 @@
     <string name="btn_confirm_transfer">[ CONFIRMAR ENVÍO ]</string>
     <string name="btn_cancel">Cancelar</string>
     <string name="transfer_success_message">Transferencia de $%s enviada correctamente.</string>
+
+
+    <!-- ══════════════════════════════════════════════
+         ATM — Cajero automático
+    ══════════════════════════════════════════════ -->
+    <string name="atm_title">CAJERO AUTOMÁTICO</string>
+    <string name="atm_subtitle">Selecciona una operación</string>
+    <string name="atm_deposit_title">DEPÓSITO</string>
+    <string name="atm_withdraw_title">RETIRO</string>
+    <string name="atm_payment_title">PAGO</string>
+    <string name="atm_label_amount">Monto</string>
+    <string name="atm_label_reference">Referencia de pago</string>
+    <string name="atm_label_pin">PIN de confirmación</string>
+    <string name="btn_atm_confirm">[ CONFIRMAR ]</string>
+    <string name="atm_success_deposit">Depósito de $%s realizado con éxito.</string>
+    <string name="atm_success_withdraw">Retiro de $%s realizado con éxito.</string>
+    <string name="atm_success_payment">Pago de $%s registrado con éxito.</string>
 
 </resources>
