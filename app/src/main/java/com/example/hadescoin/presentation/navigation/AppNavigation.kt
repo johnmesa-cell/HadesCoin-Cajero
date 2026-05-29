@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.hadescoin.presentation.atm.AtmView
 import com.example.hadescoin.presentation.auth.login.LoginView
 import com.example.hadescoin.presentation.home.HomeView
 
@@ -14,7 +15,7 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController,
+        navController    = navController,
         startDestination = "login"
     ) {
         composable("login") {
@@ -22,11 +23,19 @@ fun AppNavigation() {
         }
 
         composable(
-            route = "home/{phoneNumber}",
+            route     = "home/{phoneNumber}",
             arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })
         ) { backStackEntry ->
             val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
             HomeView(phoneNumber = phoneNumber, navController = navController)
+        }
+
+        composable(
+            route     = "atm/{phoneNumber}",
+            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
+            AtmView(phoneNumber = phoneNumber, navController = navController)
         }
     }
 }

@@ -64,11 +64,10 @@ fun LoginView(
                 phoneNumber = it; viewModel.clearError()
             }
         },
-        onPinChange   = {
+        onPinChange = {
             if (it.length <= 4 && it.all { c -> c.isDigit() }) { pin = it; viewModel.clearError() }
         },
-        onLoginClick    = { viewModel.login(phoneNumber, pin) },
-        onRegisterClick = { navController.navigate("register") }
+        onLoginClick = { viewModel.login(phoneNumber, pin) }
     )
 
     if (cargando) ShowLoadingAlertDialog()
@@ -90,14 +89,11 @@ fun LoginContent(
     loginError: String?,
     onPhoneChange: (String) -> Unit,
     onPinChange: (String) -> Unit,
-    onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onLoginClick: () -> Unit
 ) {
     HadesBackground {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 28.dp),
+            modifier              = Modifier.fillMaxSize().padding(horizontal = 28.dp),
             verticalArrangement   = Arrangement.Center,
             horizontalAlignment   = Alignment.CenterHorizontally
         ) {
@@ -178,28 +174,6 @@ fun LoginContent(
                     cargando     = cargando
                 )
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text     = stringResource(R.string.text_no_account),
-                    fontSize = 13.sp,
-                    color    = HadesOnDark.copy(alpha = 0.5f)
-                )
-                TextButton(
-                    onClick        = onRegisterClick,
-                    contentPadding = PaddingValues(horizontal = 4.dp)
-                ) {
-                    Text(
-                        text          = stringResource(R.string.btn_register_link),
-                        fontSize      = 13.sp,
-                        fontWeight    = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color         = HadesOrange
-                    )
-                }
-            }
         }
     }
 }
@@ -210,7 +184,7 @@ fun LoginViewPreview() {
     HadesCoinTheme {
         LoginContent(
             phoneNumber = "", pin = "", cargando = false, loginError = null,
-            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}, onRegisterClick = {}
+            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}
         )
     }
 }
@@ -221,7 +195,7 @@ fun LoginViewFilledPreview() {
     HadesCoinTheme {
         LoginContent(
             phoneNumber = "3001234567", pin = "1234", cargando = false, loginError = null,
-            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}, onRegisterClick = {}
+            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}
         )
     }
 }
@@ -232,7 +206,7 @@ fun LoginViewLoadingPreview() {
     HadesCoinTheme {
         LoginContent(
             phoneNumber = "3001234567", pin = "1234", cargando = true, loginError = null,
-            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}, onRegisterClick = {}
+            onPhoneChange = {}, onPinChange = {}, onLoginClick = {}
         )
     }
 }

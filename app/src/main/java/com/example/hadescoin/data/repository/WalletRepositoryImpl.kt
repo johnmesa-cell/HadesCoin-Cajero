@@ -12,7 +12,6 @@ class WalletRepositoryImpl(
     private val transactionDataSource: FirebaseTransactionDataSource = FirebaseTransactionDataSource()
 ) : WalletRepository {
 
-    // ── Mapeo DataSnapshot → AppUser ────────────────────────────────────
     private fun mapUser(snapshot: com.google.firebase.database.DataSnapshot): AppUser {
         return AppUser(
             id             = snapshot.key ?: "",
@@ -25,23 +24,21 @@ class WalletRepositoryImpl(
         )
     }
 
-    // ── Mapeo DataSnapshot → WalletTransaction ───────────────────────────
     private fun mapTransaction(
         snapshot: com.google.firebase.database.DataSnapshot,
         currentPhone: String
     ): WalletTransaction {
-        val senderId   = snapshot.child("senderId").getValue(String::class.java) ?: ""
-        val receiverId = snapshot.child("receiverId").getValue(String::class.java) ?: ""
-        val type       = snapshot.child("type").getValue(String::class.java) ?: "TRANSFER"
-        val direction  = when {
-            type != "TRANSFER"           -> if (senderId == currentPhone) "OUT" else "IN"
-            senderId == currentPhone     -> "OUT"
-            else                         -> "IN"
+        val senderId  = snapshot.child("senderId").getValue(String::class.java) ?: ""
+        val type      = snapshot.child("type").getValue(String::class.java) ?: "DEPOSIT"
+        val direction = when (type) {
+            "DEPOSIT" -> "IN"
+            "WITHDRAW", "PAYMENT" -> "OUT"
+            else -> if (senderId == currentPhone) "OUT" else "IN"
         }
         return WalletTransaction(
             id         = snapshot.key ?: "",
             senderId   = senderId,
-            receiverId = receiverId,
+            receiverId = snapshot.child("receiverId").getValue(String::class.java) ?: "",
             amount     = snapshot.child("amount").getValue(Double::class.java) ?: 0.0,
             type       = type,
             direction  = direction,
@@ -63,43 +60,66 @@ class WalletRepositoryImpl(
         return mapUser(snapshot)
     }
 
-    override suspend fun transferFunds(
-        senderPhone: String,
-        receiverPhone: String,
-        amount: Double,
-        pin: String
-    ): Result<Unit> {
+    override suspend fun deposit(phoneNumber: String, amount: Double, pin: String): Result<Unit> {
         return try {
-            val senderSnapshot = userDataSource.getUser(senderPhone)
+            val snapshot = userDataSource.getUser(phoneNumber)
                 ?: return Result.failure(Exception("Usuario no encontrado"))
-            val sender = mapUser(senderSnapshot)
+            val user = mapUser(snapshot)
+            if (user.pin != pin) return Result.failure(Exception("PIN incorrecto"))
+            if (amount <= 0) return Result.failure(Exception("El monto debe ser mayor a cero"))
 
-            if (sender.pin != pin)
-                return Result.failure(Exception("PIN incorrecto"))
-            if (sender.balance < amount)
-                return Result.failure(Exception("Saldo insuficiente"))
-            if (senderPhone == receiverPhone)
-                return Result.failure(Exception("No puedes transferirte a ti mismo"))
-
-            val receiverSnapshot = userDataSource.getUser(receiverPhone)
-                ?: return Result.failure(Exception("El destinatario no existe"))
-            val receiver = mapUser(receiverSnapshot)
-
-            userDataSource.updateBalance(senderPhone,   sender.balance   - amount)
-            userDataSource.updateBalance(receiverPhone, receiver.balance + amount)
-
-            val data = mapOf(
-                "senderId"   to senderPhone,
-                "receiverId" to receiverPhone,
+            userDataSource.updateBalance(phoneNumber, user.balance + amount)
+            transactionDataSource.saveTransaction(mapOf(
+                "senderId"   to phoneNumber,
+                "receiverId" to phoneNumber,
                 "amount"     to amount,
-                "type"       to "TRANSFER",
+                "type"       to "DEPOSIT",
                 "timestamp"  to Instant.now().toString()
-            )
-            transactionDataSource.saveTransaction(data)
-
+            ))
             Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun withdraw(phoneNumber: String, amount: Double, pin: String): Result<Unit> {
+        return try {
+            val snapshot = userDataSource.getUser(phoneNumber)
+                ?: return Result.failure(Exception("Usuario no encontrado"))
+            val user = mapUser(snapshot)
+            if (user.pin != pin)       return Result.failure(Exception("PIN incorrecto"))
+            if (amount <= 0)           return Result.failure(Exception("El monto debe ser mayor a cero"))
+            if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
+
+            userDataSource.updateBalance(phoneNumber, user.balance - amount)
+            transactionDataSource.saveTransaction(mapOf(
+                "senderId"   to phoneNumber,
+                "receiverId" to phoneNumber,
+                "amount"     to amount,
+                "type"       to "WITHDRAW",
+                "timestamp"  to Instant.now().toString()
+            ))
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun payment(phoneNumber: String, amount: Double, reference: String, pin: String): Result<Unit> {
+        return try {
+            val snapshot = userDataSource.getUser(phoneNumber)
+                ?: return Result.failure(Exception("Usuario no encontrado"))
+            val user = mapUser(snapshot)
+            if (user.pin != pin)           return Result.failure(Exception("PIN incorrecto"))
+            if (amount <= 0)               return Result.failure(Exception("El monto debe ser mayor a cero"))
+            if (user.balance < amount)     return Result.failure(Exception("Saldo insuficiente"))
+            if (reference.isBlank())       return Result.failure(Exception("La referencia no puede estar vacía"))
+
+            userDataSource.updateBalance(phoneNumber, user.balance - amount)
+            transactionDataSource.saveTransaction(mapOf(
+                "senderId"   to phoneNumber,
+                "receiverId" to reference,
+                "amount"     to amount,
+                "type"       to "PAYMENT",
+                "timestamp"  to Instant.now().toString()
+            ))
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
     }
 }
