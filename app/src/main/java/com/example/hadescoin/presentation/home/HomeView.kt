@@ -32,6 +32,9 @@ import com.example.hadescoin.presentation.components.ShowLoadingAlertDialog
 import com.example.hadescoin.presentation.components.ShowMessageAlertDialog
 import com.example.hadescoin.ui.theme.*
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Entry point (con NavController + ViewModel)
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HomeView(
     phoneNumber: String,
@@ -52,8 +55,8 @@ fun HomeView(
     }
 
     HomeViewContent(
-        appUser  = appUser,
-        cargando = cargando,
+        appUser    = appUser,
+        cargando   = cargando,
         onDeposit  = { navController.navigate("atm/$phoneNumber/DEPOSIT") },
         onWithdraw = { navController.navigate("atm/$phoneNumber/WITHDRAW") },
         onPayment  = { navController.navigate("atm/$phoneNumber/PAYMENT") },
@@ -73,10 +76,13 @@ fun HomeView(
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Contenido puro (previsualización + test)
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HomeViewContent(
-    appUser: AppUser?,
-    cargando: Boolean,
+    appUser:    AppUser?,
+    cargando:   Boolean,
     onDeposit:  () -> Unit = {},
     onWithdraw: () -> Unit = {},
     onPayment:  () -> Unit = {},
@@ -84,18 +90,18 @@ fun HomeViewContent(
 ) {
     HadesBackground {
         Column(
-            modifier              = Modifier
+            modifier            = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 28.dp),
-            verticalArrangement   = Arrangement.SpaceBetween,
-            horizontalAlignment   = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(0.dp))
 
-            // ── Bloque superior: marca + bienvenida ─────────────────
+            // ── Bloque superior: marca + bienvenida ─────────────────────────
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 72.dp)
+                modifier            = Modifier.padding(top = 72.dp)
             ) {
                 Text(
                     text          = stringResource(R.string.home_app_label),
@@ -126,7 +132,7 @@ fun HomeViewContent(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    text       = stringResource(
+                    text      = stringResource(
                         R.string.home_greeting,
                         appUser?.fullName ?: stringResource(R.string.home_no_data)
                     ),
@@ -137,17 +143,17 @@ fun HomeViewContent(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text      = stringResource(R.string.home_select_operation),
-                    fontSize  = 12.sp,
-                    color     = HadesOnDark.copy(alpha = 0.4f),
+                    text          = stringResource(R.string.home_select_operation),
+                    fontSize      = 12.sp,
+                    color         = HadesOnDark.copy(alpha = 0.4f),
                     letterSpacing = 1.sp,
-                    textAlign = TextAlign.Center
+                    textAlign     = TextAlign.Center
                 )
             }
 
-            // ── Botones de operación ───────────────────────────
+            // ── Botones de operación ────────────────────────────────────────
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier            = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 AtmActionButton(
@@ -173,7 +179,7 @@ fun HomeViewContent(
                 )
             }
 
-            // ── Pie: cerrar sesión ─────────────────────────────
+            // ── Pie: finalizar sesión ───────────────────────────────────────
             TextButton(
                 onClick  = onLogout,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -196,13 +202,16 @@ fun HomeViewContent(
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Botón de acción del cajero
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun AtmActionButton(
-    label: String,
+    label:    String,
     sublabel: String,
-    icon: ImageVector,
-    color: Color,
-    onClick: () -> Unit
+    icon:     ImageVector,
+    color:    Color,
+    onClick:  () -> Unit
 ) {
     Surface(
         onClick        = onClick,
@@ -240,16 +249,19 @@ private fun AtmActionButton(
                     color         = color
                 )
                 Text(
-                    text      = sublabel,
-                    fontSize  = 11.sp,
-                    color     = HadesOnDark.copy(alpha = 0.45f)
+                    text     = sublabel,
+                    fontSize = 11.sp,
+                    color    = HadesOnDark.copy(alpha = 0.45f)
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — bienvenida")
+// ─────────────────────────────────────────────────────────────────────────────
+// Previews  —  mismo patrón que HadesCoin original
+// ─────────────────────────────────────────────────────────────────────────────
+@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — con usuario")
 @Composable
 fun HomeViewPreview() {
     HadesCoinTheme {
@@ -260,10 +272,24 @@ fun HomeViewPreview() {
     }
 }
 
+@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — sin usuario")
+@Composable
+fun HomeViewEmptyPreview() {
+    HadesCoinTheme {
+        HomeViewContent(
+            appUser  = null,
+            cargando = false
+        )
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — cargando")
 @Composable
 fun HomeViewLoadingPreview() {
     HadesCoinTheme {
-        HomeViewContent(appUser = null, cargando = true)
+        HomeViewContent(
+            appUser  = null,
+            cargando = true
+        )
     }
 }
