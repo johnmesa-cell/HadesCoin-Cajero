@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.hadescoin.presentation.atm.AtmOperation
 import com.example.hadescoin.presentation.atm.AtmView
 import com.example.hadescoin.presentation.auth.login.LoginView
 import com.example.hadescoin.presentation.home.HomeView
@@ -25,17 +26,31 @@ fun AppNavigation() {
         composable(
             route     = "home/{phoneNumber}",
             arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
-            HomeView(phoneNumber = phoneNumber, navController = navController)
+        ) { back ->
+            HomeView(
+                phoneNumber   = back.arguments?.getString("phoneNumber") ?: "",
+                navController = navController
+            )
         }
 
         composable(
-            route     = "atm/{phoneNumber}",
-            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
-            AtmView(phoneNumber = phoneNumber, navController = navController)
+            route     = "atm/{phoneNumber}/{operation}",
+            arguments = listOf(
+                navArgument("phoneNumber") { type = NavType.StringType },
+                navArgument("operation")   { type = NavType.StringType }
+            )
+        ) { back ->
+            val phone = back.arguments?.getString("phoneNumber") ?: ""
+            val op    = when (back.arguments?.getString("operation")) {
+                "WITHDRAW" -> AtmOperation.WITHDRAW
+                "PAYMENT"  -> AtmOperation.PAYMENT
+                else       -> AtmOperation.DEPOSIT
+            }
+            AtmView(
+                phoneNumber   = phone,
+                operation     = op,
+                navController = navController
+            )
         }
     }
 }

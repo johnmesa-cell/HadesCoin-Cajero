@@ -1,129 +1,57 @@
 <resources>
 
-    <!-- ══════════════════════════════════════════════
+    <!-- ══════════════════════════════════════════════════
          APP
-    ══════════════════════════════════════════════ -->
+    ══════════════════════════════════════════════════ -->
     <string name="app_name">HadesCoin Cajero</string>
 
-
-    <!-- ══════════════════════════════════════════════
-         GENERAL — Diálogos y estados compartidos
-    ══════════════════════════════════════════════ -->
-    <string name="text_loading">Cargando...</string>
+    <!-- ══════════════════════════════════════════════════
+         GENERAL
+    ══════════════════════════════════════════════════ -->
+    <string name="text_loading">Procesando…</string>
     <string name="btn_accept">Aceptar</string>
     <string name="dialog_error_title">Error</string>
     <string name="dialog_success_title">Éxito</string>
-    <string name="label_records">%d registros</string>
+    <string name="cd_back">Atrás</string>
+    <string name="cd_logo">HadesCoin Cajero Logo</string>
 
-
-    <!-- ══════════════════════════════════════════════
-         LOGIN — Pantalla de inicio de sesión
-    ══════════════════════════════════════════════ -->
-    <string name="login_title">HADESCOIN CAJERO</string>
+    <!-- ══════════════════════════════════════════════════
+         LOGIN
+    ══════════════════════════════════════════════════ -->
+    <string name="login_title">HADESCOIN</string>
     <string name="login_subtitle">// CAJERO AUTOMÁTICO</string>
-    <string name="login_section_header">&gt; INICIAR SESIÓN</string>
+    <string name="login_section_header">&gt; INSERTAR TARJETA</string>
     <string name="label_phone_number">Número de teléfono</string>
     <string name="label_pin">PIN de 4 dígitos</string>
     <string name="btn_login">[ INGRESAR ]</string>
     <string name="btn_login_loading">VERIFICANDO…</string>
-    <string name="text_no_account">¿Sin cuenta? </string>
-    <string name="btn_register_link">REGISTRARSE ›</string>
     <string name="error_login_failed">Teléfono o PIN incorrectos</string>
 
-
-    <!-- ══════════════════════════════════════════════
-         REGISTER — Pantalla de registro de usuario
-    ══════════════════════════════════════════════ -->
-    <string name="register_subtitle">// CREA TU CUENTA</string>
-    <string name="register_section_header">&gt; NUEVO USUARIO</string>
-    <string name="label_full_name">Nombre completo</string>
-    <string name="label_document_number">Número de Documento</string>
-    <string name="label_phone_number_register">Número de Teléfono</string>
-    <string name="label_confirm_pin">Confirmar PIN</string>
-    <string name="btn_register">[ CREAR CUENTA ]</string>
-    <string name="btn_register_loading">PROCESANDO…</string>
-    <string name="text_has_account">¿Ya tienes cuenta? </string>
-    <string name="btn_login_link">INICIAR SESIÓN ›</string>
-    <string name="error_pins_no_match">Los PINs no coinciden</string>
-    <string name="error_register_failed">Ya existe una cuenta con ese número de teléfono</string>
-    <string name="register_success_message">¡Cuenta creada con éxito!</string>
-
-
-    <!-- ══════════════════════════════════════════════
-         HOME — Pantalla principal / billetera
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════════
+         HOME — Menú del cajero
+    ══════════════════════════════════════════════════ -->
     <string name="home_app_label">HADESCOIN CAJERO</string>
-    <string name="home_greeting">Hola, %s</string>
+    <string name="home_greeting">Bienvenido, %s</string>
     <string name="home_no_data">…</string>
-    <string name="home_movements_header">&gt; MOVIMIENTOS</string>
-    <string name="home_empty_title">// SIN MOVIMIENTOS</string>
-    <string name="home_empty_subtitle">No hay transacciones registradas</string>
-    <string name="label_available_balance">Saldo disponible</string>
-    <string name="label_phone">TELÉFONO</string>
-    <string name="label_document">DOCUMENTO</string>
-    <string name="label_member_since">MIEMBRO DESDE</string>
-    <string name="label_incomes">INGRESOS</string>
-    <string name="label_expenses">EGRESOS</string>
-    <string name="cd_refresh">Actualizar</string>
-    <string name="cd_logo">HadesCoin Cajero Logo</string>
-    <string name="btn_logout">Cerrar sesión</string>
+    <string name="home_select_operation">SELECCIONA UNA OPERACIÓN</string>
+    <string name="btn_logout">Finalizar sesión</string>
 
-
-    <!-- ══════════════════════════════════════════════
-         HOME — Speed Dial (acciones rápidas)
-    ══════════════════════════════════════════════ -->
-    <string name="action_transfer">TRANSFERIR</string>
-    <string name="action_deposit">DEPOSITAR</string>
-    <string name="action_withdraw">RETIRAR</string>
-    <string name="action_pay">PAGAR</string>
-
-
-    <!-- ══════════════════════════════════════════════
-         TRANSFER — Pantalla de transferencia
-    ══════════════════════════════════════════════ -->
-    <string name="transfer_title">TRANSFERENCIA</string>
-    <string name="transfer_subtitle">Envía dinero de forma segura</string>
-    <string name="transfer_section_header">&gt; DATOS DE ENVÍO</string>
-    <string name="transfer_summary_header">&gt; RESUMEN</string>
-    <string name="label_balance_available">SALDO DISPONIBLE</string>
-    <string name="label_from_phone">Desde (tu teléfono)</string>
-    <string name="label_receiver_phone">Teléfono destinatario</string>
-    <string name="label_amount">Monto a enviar</string>
-    <string name="label_amount_insufficient">Monto (insuficiente)</string>
-    <string name="label_pin_confirm">PIN de confirmación (4 dígitos)</string>
-    <string name="warning_insufficient_balance">⚠ Saldo insuficiente para esta transferencia</string>
-    <string name="label_to_send">A ENVIAR</string>
-    <string name="label_remaining">QUEDARÁ</string>
-    <string name="btn_review_transfer">[ REVISAR TRANSFERENCIA ]</string>
-    <string name="cd_back">Atrás</string>
-
-
-    <!-- ══════════════════════════════════════════════
-         TRANSFER — Modal de confirmación
-    ══════════════════════════════════════════════ -->
-    <string name="confirm_transfer_title">¿Confirmar transferencia?</string>
-    <string name="confirm_transfer_subtitle">Esta acción no se puede deshacer</string>
-    <string name="confirm_from">DESDE</string>
-    <string name="confirm_to">HACIA</string>
-    <string name="btn_confirm_transfer">[ CONFIRMAR ENVÍO ]</string>
-    <string name="btn_cancel">Cancelar</string>
-    <string name="transfer_success_message">Transferencia de $%s enviada correctamente.</string>
-
-
-    <!-- ══════════════════════════════════════════════
-         ATM — Cajero automático
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════════
+         ATM — Pantallas de operación
+    ══════════════════════════════════════════════════ -->
     <string name="atm_title">CAJERO AUTOMÁTICO</string>
     <string name="atm_subtitle">Selecciona una operación</string>
     <string name="atm_deposit_title">DEPÓSITO</string>
+    <string name="atm_deposit_desc">Ingresa dinero a tu cuenta</string>
     <string name="atm_withdraw_title">RETIRO</string>
+    <string name="atm_withdraw_desc">Extrae efectivo de tu cuenta</string>
     <string name="atm_payment_title">PAGO</string>
+    <string name="atm_payment_desc">Paga servicios o referencias</string>
     <string name="atm_label_amount">Monto</string>
     <string name="atm_label_reference">Referencia de pago</string>
     <string name="atm_label_pin">PIN de confirmación</string>
-    <string name="btn_atm_confirm">[ CONFIRMAR ]</string>
-    <string name="atm_success_deposit">Depósito de $%s realizado con éxito.</string>
-    <string name="atm_success_withdraw">Retiro de $%s realizado con éxito.</string>
-    <string name="atm_success_payment">Pago de $%s registrado con éxito.</string>
+    <string name="btn_atm_deposit">[ CONFIRMAR DEPÓSITO ]</string>
+    <string name="btn_atm_withdraw">[ CONFIRMAR RETIRO ]</string>
+    <string name="btn_atm_pay">[ CONFIRMAR PAGO ]</string>
 
 </resources>
