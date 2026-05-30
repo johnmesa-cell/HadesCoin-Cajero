@@ -102,6 +102,7 @@ class WalletRepositoryImpl(
             transactionDataSource.saveTransaction(mapOf(
                 "senderId"  to phoneNumber, "receiverId" to phoneNumber,
                 "amount"    to amount,      "type"       to "DEPOSIT",
+                "source"    to "ATM",
                 "timestamp" to Instant.now().toString()
             ))
             Result.success(Unit)
