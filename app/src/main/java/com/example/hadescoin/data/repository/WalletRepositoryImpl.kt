@@ -50,7 +50,8 @@ class WalletRepositoryImpl(
         val direction = when (type) {
             "DEPOSIT"                                  -> "IN"
             "WITHDRAW", "PAYMENT",
-            "WITHDRAWAL_PENDING", "WITHDRAWAL_COMPLETED" -> "OUT"
+            "WITHDRAWAL_PENDING", "WITHDRAWAL_COMPLETED",
+            "WITHDRAWAL_FAILED"                          -> "OUT"
             else -> if (senderId == currentPhone) "OUT" else "IN"
         }
         return WalletTransaction(

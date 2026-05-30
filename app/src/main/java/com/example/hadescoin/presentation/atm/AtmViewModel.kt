@@ -100,8 +100,8 @@ class AtmViewModel(
             _error.value = "Demasiados intentos fallidos. Espera $secsLeft segundos."
             return
         } else if (_bloqueado.value == true) {
-            _bloqueado.value = false
-            blockDataSource.clear()
+            _bloqueado.value        = false
+            _bloqueadoHastaMs.value = 0L
         }
 
         if (phoneNumber.isBlank()) { _error.value = "Ingresa el número de teléfono"; return }
