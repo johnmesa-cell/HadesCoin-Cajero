@@ -5,6 +5,7 @@ import com.example.hadescoin.data.datasource.FirebaseUserDataSource
 import com.example.hadescoin.domain.model.AppUser
 import com.example.hadescoin.domain.model.WalletTransaction
 import com.example.hadescoin.domain.repository.WalletRepository
+import com.google.firebase.database.DataSnapshot
 import java.time.Instant
 
 class WalletRepositoryImpl(
@@ -12,7 +13,7 @@ class WalletRepositoryImpl(
     private val transactionDataSource: FirebaseTransactionDataSource = FirebaseTransactionDataSource()
 ) : WalletRepository {
 
-    private fun mapUser(snapshot: com.google.firebase.database.DataSnapshot): AppUser {
+    private fun mapUser(snapshot: DataSnapshot): AppUser {
         return AppUser(
             id             = snapshot.key ?: "",
             documentNumber = snapshot.child("documentNumber").getValue(String::class.java) ?: "",
@@ -24,18 +25,14 @@ class WalletRepositoryImpl(
         )
     }
 
-    private fun mapTransaction(
-        snapshot:     com.google.firebase.database.DataSnapshot,
-        currentPhone: String
-    ): WalletTransaction {
+    private fun mapTransaction(snapshot: DataSnapshot, currentPhone: String): WalletTransaction {
         val senderId  = snapshot.child("senderId").getValue(String::class.java)  ?: ""
         val type      = snapshot.child("type").getValue(String::class.java)      ?: "DEPOSIT"
         val direction = when (type) {
-            "DEPOSIT"              -> "IN"
+            "DEPOSIT"                                  -> "IN"
             "WITHDRAW", "PAYMENT",
-            "WITHDRAWAL_PENDING",
-            "WITHDRAWAL_COMPLETED" -> "OUT"
-            else                   -> if (senderId == currentPhone) "OUT" else "IN"
+            "WITHDRAWAL_PENDING", "WITHDRAWAL_COMPLETED" -> "OUT"
+            else -> if (senderId == currentPhone) "OUT" else "IN"
         }
         return WalletTransaction(
             id               = snapshot.key ?: "",
@@ -74,9 +71,9 @@ class WalletRepositoryImpl(
             if (amount <= 0)     return Result.failure(Exception("El monto debe ser mayor a cero"))
             userDataSource.updateBalance(phoneNumber, user.balance + amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"   to phoneNumber, "receiverId" to phoneNumber,
-                "amount"     to amount,      "type"       to "DEPOSIT",
-                "timestamp"  to Instant.now().toString()
+                "senderId"  to phoneNumber, "receiverId" to phoneNumber,
+                "amount"    to amount,      "type"       to "DEPOSIT",
+                "timestamp" to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -92,9 +89,9 @@ class WalletRepositoryImpl(
             if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"   to phoneNumber, "receiverId" to phoneNumber,
-                "amount"     to amount,      "type"       to "WITHDRAW",
-                "timestamp"  to Instant.now().toString()
+                "senderId"  to phoneNumber, "receiverId" to phoneNumber,
+                "amount"    to amount,      "type"       to "WITHDRAW",
+                "timestamp" to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -111,9 +108,9 @@ class WalletRepositoryImpl(
             if (reference.isBlank())   return Result.failure(Exception("La referencia no puede estar vacía"))
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"   to phoneNumber, "receiverId" to reference,
-                "amount"     to amount,      "type"       to "PAYMENT",
-                "timestamp"  to Instant.now().toString()
+                "senderId"  to phoneNumber, "receiverId" to reference,
+                "amount"    to amount,      "type"       to "PAYMENT",
+                "timestamp" to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -129,33 +126,29 @@ class WalletRepositoryImpl(
                 ?: return Result.failure(Exception("Usuario no encontrado"))
             val user = mapUser(snapshot)
 
-            // Leer campos withdrawal del nodo del usuario
-            val storedCode   = snapshot.child("withdrawalCode").getValue(String::class.java)   ?: ""
+            val storedCode   = snapshot.child("withdrawalCode").getValue(String::class.java)               ?: ""
             val storedAmount = snapshot.child("withdrawalAmount").getValue(String::class.java)?.toDoubleOrNull() ?: 0.0
-            val storedExpiry = snapshot.child("withdrawalExpiry").getValue(String::class.java) ?: ""
+            val storedExpiry = snapshot.child("withdrawalExpiry").getValue(String::class.java)              ?: ""
 
             if (storedCode.isBlank())  return Result.failure(Exception("No hay un código de retiro generado para este usuario"))
             if (storedCode != code)    return Result.failure(Exception("Código incorrecto"))
 
-            // Validar expiración
             if (storedExpiry.isNotBlank()) {
-                val expiry = java.time.Instant.parse(storedExpiry)
-                if (java.time.Instant.now().isAfter(expiry))
+                val expiry = Instant.parse(storedExpiry)
+                if (Instant.now().isAfter(expiry))
                     return Result.failure(Exception("El código ha expirado. Genera uno nuevo desde la app."))
             }
 
-            // Validar monto
             if (amount > storedAmount) return Result.failure(Exception("El monto supera el autorizado (máx: $${"%,.0f".format(storedAmount)})"))
             if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
 
-            // Procesar
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"   to phoneNumber,
+                "senderId"  to phoneNumber,
                 "receiverId" to "ATM",
-                "amount"     to amount,
-                "type"       to "WITHDRAWAL_COMPLETED",
-                "timestamp"  to java.time.Instant.now().toString()
+                "amount"    to amount,
+                "type"      to "WITHDRAWAL_COMPLETED",
+                "timestamp" to Instant.now().toString()
             ))
             // Limpiar campos withdrawal del usuario
             userDataSource.updateUserField(phoneNumber, "withdrawalCode",   "")

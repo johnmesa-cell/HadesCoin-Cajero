@@ -19,17 +19,20 @@ class FirebaseUserDataSource {
             if (snapshot.exists()) return false
             database.child(phoneNumber).setValue(userData).await()
             true
-        } catch (_: Exception) {
-            false
-        }
+        } catch (_: Exception) { false }
     }
 
     suspend fun updateBalance(phoneNumber: String, newBalance: Double): Boolean {
         return try {
             database.child(phoneNumber).child("balance").setValue(newBalance).await()
             true
-        } catch (_: Exception) {
-            false
-        }
+        } catch (_: Exception) { false }
+    }
+
+    suspend fun updateUserField(phoneNumber: String, field: String, value: Any): Boolean {
+        return try {
+            database.child(phoneNumber).child(field).setValue(value).await()
+            true
+        } catch (_: Exception) { false }
     }
 }
