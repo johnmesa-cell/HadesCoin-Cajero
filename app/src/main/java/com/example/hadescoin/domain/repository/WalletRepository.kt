@@ -9,4 +9,20 @@ interface WalletRepository {
     suspend fun deposit(phoneNumber: String, amount: Double, pin: String): Result<Unit>
     suspend fun withdraw(phoneNumber: String, amount: Double, pin: String): Result<Unit>
     suspend fun payment(phoneNumber: String, amount: Double, reference: String, pin: String): Result<Unit>
+
+    /**
+     * Procesa un retiro en cajero usando código temporal.
+     * Valida:
+     *  - Que el usuario exista
+     *  - Que el código coincida con withdrawalCode en Firebase
+     *  - Que no haya expirado (withdrawalExpiry)
+     *  - Que el monto solicitado sea <= withdrawalAmount autorizado
+     *  - Que haya saldo suficiente
+     * Si todo es válido: descuenta saldo, guarda TX WITHDRAWAL_COMPLETED, limpia campos withdrawal.
+     */
+    suspend fun processWithdrawal(
+        phoneNumber: String,
+        code:        String,
+        amount:      Double
+    ): Result<Unit>
 }
