@@ -45,10 +45,10 @@ class WalletRepositoryImpl(
     }
 
     private fun mapTransaction(snapshot: DataSnapshot, currentPhone: String): WalletTransaction {
-        val senderId  = snapshot.child("senderId").getValue(String::class.java)  ?: ""
-        val type      = snapshot.child("type").getValue(String::class.java)      ?: "DEPOSIT"
+        val senderId  = snapshot.child("senderId").getValue(String::class.java) ?: ""
+        val type      = snapshot.child("type").getValue(String::class.java)     ?: "DEPOSIT"
         val direction = when (type) {
-            "DEPOSIT"                                  -> "IN"
+            "DEPOSIT"                                    -> "IN"
             "WITHDRAW", "PAYMENT",
             "WITHDRAWAL_PENDING", "WITHDRAWAL_COMPLETED",
             "WITHDRAWAL_FAILED"                          -> "OUT"
@@ -64,7 +64,8 @@ class WalletRepositoryImpl(
             timestamp        = snapshot.child("timestamp").getValue(String::class.java)        ?: "",
             verificationCode = snapshot.child("verificationCode").getValue(String::class.java) ?: "",
             withdrawalAmount = snapshot.child("withdrawalAmount").getValue(Double::class.java) ?: 0.0,
-            expiresAt        = snapshot.child("expiresAt").getValue(String::class.java)        ?: ""
+            expiresAt        = snapshot.child("expiresAt").getValue(String::class.java)        ?: "",
+            source           = snapshot.child("source").getValue(String::class.java)           ?: ""
         )
     }
 
@@ -185,14 +186,13 @@ class WalletRepositoryImpl(
             if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
 
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
-            
+
             if (storedTxId.isNotBlank()) {
                 transactionDataSource.updateTransactionField(storedTxId, "type",      "WITHDRAWAL_COMPLETED")
                 transactionDataSource.updateTransactionField(storedTxId, "amount",    amount)
                 transactionDataSource.updateTransactionField(storedTxId, "timestamp", Instant.now().toString())
             }
 
-            // Limpiar campos withdrawal del usuario
             userDataSource.updateUserField(phoneNumber, "withdrawalCode",   "")
             userDataSource.updateUserField(phoneNumber, "withdrawalAmount", "")
             userDataSource.updateUserField(phoneNumber, "withdrawalExpiry", "")
