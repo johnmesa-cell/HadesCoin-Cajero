@@ -32,8 +32,8 @@ class AtmViewModel(
     val error: LiveData<String?> = _error
 
     // ── Bloqueo temporal por intentos fallidos ──────────────────────────
-    val MAX_ATTEMPTS              = 3
-    val BLOCK_DURATION_MS         = 3 * 60 * 1000L   // 3 minutos (pruebas)
+    val MAX_ATTEMPTS      = 3
+    val BLOCK_DURATION_MS = 3 * 60 * 1000L   // 3 minutos
 
     private val _bloqueado        = MutableLiveData(false)
     val bloqueado: LiveData<Boolean> = _bloqueado
@@ -48,9 +48,9 @@ class AtmViewModel(
         val hasta = blockDataSource.getBlockedUntilMs()
         val ahora = System.currentTimeMillis()
         if (hasta > ahora) {
-            _bloqueado.value       = true
+            _bloqueado.value        = true
             _bloqueadoHastaMs.value = hasta
-            _segundosBloqueo.value = ((hasta - ahora) / 1000).toInt()
+            _segundosBloqueo.value  = ((hasta - ahora) / 1000).toInt()
         }
     }
 
@@ -61,23 +61,23 @@ class AtmViewModel(
         amount:      Double,
         reference:   String = ""
     ) {
-        if (amount <= 0)  { _error.value = "El monto debe ser mayor a cero"; return }
+        if (amount <= 0) { _error.value = "El monto debe ser mayor a cero"; return }
         if (operation == AtmOperation.PAYMENT && reference.isBlank()) {
             _error.value = "La referencia no puede estar vacía"; return
         }
         viewModelScope.launch {
             _cargando.value = true
             val result = when (operation) {
-                AtmOperation.DEPOSIT  -> depositUseCase(phoneNumber, amount)
-                AtmOperation.PAYMENT  -> paymentUseCase(phoneNumber, amount, reference)
-                else                  -> Result.failure(Exception("Operación inválida"))
+                AtmOperation.DEPOSIT -> depositUseCase(phoneNumber, amount)
+                AtmOperation.PAYMENT -> paymentUseCase(phoneNumber, amount, reference)
+                else                 -> Result.failure(Exception("Operación inválida"))
             }
             result.fold(
                 onSuccess = {
                     _exito.value = when (operation) {
-                        AtmOperation.DEPOSIT  -> "Depósito de $${"%,.0f".format(amount)} realizado con éxito."
-                        AtmOperation.PAYMENT  -> "Pago de $${"%,.0f".format(amount)} registrado con éxito."
-                        else                  -> "Operación exitosa."
+                        AtmOperation.DEPOSIT -> "Depósito de $${"%,.0f".format(amount)} realizado con éxito."
+                        AtmOperation.PAYMENT -> "Pago de $${"%,.0f".format(amount)} registrado con éxito."
+                        else                 -> "Operación exitosa."
                     }
                 },
                 onFailure = { _error.value = it.message }
@@ -91,22 +91,27 @@ class AtmViewModel(
         val ahora = System.currentTimeMillis()
         val hasta = blockDataSource.getBlockedUntilMs()
 
-        // Revisar bloqueo activo
+        // Bloqueo activo: rechazar y mostrar tiempo restante
         if (ahora < hasta) {
             val secsLeft = ((hasta - ahora) / 1000).toInt()
-            _bloqueado.value       = true
+            _bloqueado.value        = true
             _bloqueadoHastaMs.value = hasta
-            _segundosBloqueo.value = secsLeft
+            _segundosBloqueo.value  = secsLeft
             _error.value = "Demasiados intentos fallidos. Espera $secsLeft segundos."
             return
-        } else if (_bloqueado.value == true) {
+        }
+
+        // Bloqueo expirado: limpiar estado visual E intentos acumulados
+        // para que el nuevo ciclo empiece desde 0
+        if (_bloqueado.value == true) {
             _bloqueado.value        = false
             _bloqueadoHastaMs.value = 0L
+            blockDataSource.clear()
         }
 
         if (phoneNumber.isBlank()) { _error.value = "Ingresa el número de teléfono"; return }
         if (code.length != 6)     { _error.value = "El código debe tener 6 dígitos";  return }
-        if (amount <= 0)          { _error.value = "El monto debe ser mayor a cero";    return }
+        if (amount <= 0)          { _error.value = "El monto debe ser mayor a cero";   return }
 
         viewModelScope.launch {
             _cargando.value = true
@@ -116,7 +121,7 @@ class AtmViewModel(
                     blockDataSource.clear()
                     _bloqueado.value        = false
                     _bloqueadoHastaMs.value = 0L
-                    _exito.value   = "Retiro de $${"%,.0f".format(amount)} procesado con éxito."
+                    _exito.value = "Retiro de $${"%,.0f".format(amount)} procesado con éxito."
                 },
                 onFailure = { e ->
                     val intentos = blockDataSource.getFailedAttempts() + 1
@@ -127,12 +132,9 @@ class AtmViewModel(
                         _bloqueado.value        = true
                         _bloqueadoHastaMs.value = hastaNuevo
                         _segundosBloqueo.value  = (BLOCK_DURATION_MS / 1000).toInt()
-                        
-                        viewModelScope.launch {
-                            repository.markWithdrawalFailed(phoneNumber)
-                        }
-
-                        _error.value           = "3 intentos fallidos. Bloqueado por ${BLOCK_DURATION_MS / 60000} minuto(s)."
+                        // Llamada directa — ya estamos dentro de viewModelScope.launch
+                        repository.markWithdrawalFailed(phoneNumber)
+                        _error.value = "3 intentos fallidos. Bloqueado por ${BLOCK_DURATION_MS / 60000} minuto(s)."
                     } else {
                         _error.value = "${e.message} (intento $intentos/$MAX_ATTEMPTS)"
                     }
