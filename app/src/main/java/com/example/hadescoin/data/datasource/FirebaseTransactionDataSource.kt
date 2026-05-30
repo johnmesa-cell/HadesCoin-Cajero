@@ -43,4 +43,11 @@ class FirebaseTransactionDataSource {
             false
         }
     }
+
+    suspend fun updateTransactionField(txId: String, field: String, value: Any): Boolean {
+        return try {
+            database.child(txId).child(field).setValue(value).await()
+            true
+        } catch (_: Exception) { false }
+    }
 }

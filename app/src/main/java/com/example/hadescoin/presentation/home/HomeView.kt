@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,82 +25,83 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.hadescoin.R
-import com.example.hadescoin.domain.model.AppUser
+import com.example.hadescoin.presentation.atm.AtmViewModel
 import com.example.hadescoin.presentation.components.HadesBackground
 import com.example.hadescoin.presentation.components.ShowLoadingAlertDialog
 import com.example.hadescoin.presentation.components.ShowMessageAlertDialog
 import com.example.hadescoin.ui.theme.*
+import kotlinx.coroutines.delay
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Entry point (con NavController + ViewModel)
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HomeView(
-    phoneNumber: String,
     navController: NavController,
-    viewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    atmViewModel:  AtmViewModel  = viewModel()
 ) {
-    val cargando by viewModel.cargando.observeAsState(false)
-    val appUser  by viewModel.appUser.observeAsState()
-    val error    by viewModel.error.observeAsState()
+    val cargando by homeViewModel.cargando.observeAsState(false)
+    val error    by homeViewModel.error.observeAsState()
+
+    // Bloqueo persistente
+    val bloqueadoHastaMs by atmViewModel.bloqueadoHastaMs.observeAsState(0L)
+    var segundosRestantes by remember { mutableStateOf(0) }
+
+    LaunchedEffect(bloqueadoHastaMs) {
+        while (System.currentTimeMillis() < bloqueadoHastaMs) {
+            segundosRestantes = ((bloqueadoHastaMs - System.currentTimeMillis()) / 1000).toInt()
+            delay(1000)
+        }
+        segundosRestantes = 0
+    }
+
+    val estaBloqueado = bloqueadoHastaMs > System.currentTimeMillis()
 
     var showError    by remember { mutableStateOf(false) }
     var mensajeError by remember { mutableStateOf("") }
-
-    LaunchedEffect(phoneNumber) { viewModel.loadUserData(phoneNumber) }
 
     LaunchedEffect(error) {
         error?.let { mensajeError = it; showError = true }
     }
 
     HomeViewContent(
-        appUser    = appUser,
-        cargando   = cargando,
-        onDeposit  = { navController.navigate("atm/$phoneNumber/DEPOSIT") },
-        onWithdraw = { navController.navigate("atm/$phoneNumber/WITHDRAW") },
-        onPayment  = { navController.navigate("atm/$phoneNumber/PAYMENT") },
-        onLogout   = {
-            navController.navigate("login") { popUpTo(0) { inclusive = true } }
-        }
+        cargando          = cargando,
+        estaBloqueado     = estaBloqueado,
+        segundosRestantes = segundosRestantes,
+        onWithdrawCode    = { navController.navigate("atm/WITHDRAW_CODE") },
+        onDeposit         = { navController.navigate("atm/DEPOSIT") },
+        onPayment         = { navController.navigate("atm/PAYMENT") }
     )
 
     if (cargando) ShowLoadingAlertDialog()
 
     if (showError) {
         ShowMessageAlertDialog(
-            onConfirmation = { viewModel.clearError(); showError = false },
+            onConfirmation = { homeViewModel.clearError(); showError = false },
             dialogTitle    = stringResource(R.string.dialog_error_title),
             dialogText     = mensajeError
         )
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Contenido puro (previsualización + test)
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HomeViewContent(
-    appUser:    AppUser?,
-    cargando:   Boolean,
-    onDeposit:  () -> Unit = {},
-    onWithdraw: () -> Unit = {},
-    onPayment:  () -> Unit = {},
-    onLogout:   () -> Unit = {}
+    cargando:          Boolean,
+    estaBloqueado:     Boolean = false,
+    segundosRestantes: Int     = 0,
+    onWithdrawCode:    () -> Unit = {},
+    onDeposit:         () -> Unit = {},
+    onPayment:         () -> Unit = {}
 ) {
     HadesBackground {
         Column(
             modifier            = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 28.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(0.dp))
-
-            // ── Bloque superior: marca + bienvenida ─────────────────────────
+            // ── Bloque superior: marca ─────────────────────────
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier            = Modifier.padding(top = 72.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text          = stringResource(R.string.home_app_label),
@@ -131,165 +131,139 @@ fun HomeViewContent(
                         )
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text      = stringResource(
-                        R.string.home_greeting,
-                        appUser?.fullName ?: stringResource(R.string.home_no_data)
-                    ),
-                    fontSize   = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color      = HadesOnDark.copy(alpha = 0.7f),
-                    textAlign  = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text          = stringResource(R.string.home_select_operation),
-                    fontSize      = 12.sp,
-                    color         = HadesOnDark.copy(alpha = 0.4f),
-                    letterSpacing = 1.sp,
-                    textAlign     = TextAlign.Center
-                )
+                
+                if (estaBloqueado) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(HadesOrange.copy(alpha = 0.12f))
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text       = "⛔ Retiro bloqueado — $segundosRestantes seg. restantes",
+                            color      = HadesOrange,
+                            fontWeight = FontWeight.Bold,
+                            fontSize   = 13.sp,
+                            textAlign  = TextAlign.Center,
+                            modifier   = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
+                    Text(
+                        text          = stringResource(R.string.home_select_operation),
+                        fontSize      = 14.sp,
+                        color         = HadesOnDark.copy(alpha = 0.6f),
+                        letterSpacing = 1.sp,
+                        textAlign     = TextAlign.Center,
+                        fontWeight    = FontWeight.Bold
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             // ── Botones de operación ────────────────────────────────────────
             Column(
                 modifier            = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 AtmActionButton(
-                    label    = stringResource(R.string.atm_deposit_title),
-                    sublabel = stringResource(R.string.atm_deposit_desc),
+                    label    = "Retirar con Código",
+                    sublabel = "Usa el código generado en tu app móvil",
+                    icon     = Icons.Filled.ArrowUpward,
+                    color    = HadesOrange,
+                    onClick  = onWithdrawCode,
+                    enabled  = !estaBloqueado
+                )
+                AtmActionButton(
+                    label    = "Depositar Efectivo",
+                    sublabel = "Ingresa billetes a tu cuenta",
                     icon     = Icons.Filled.ArrowDownward,
                     color    = HadesCyan,
                     onClick  = onDeposit
                 )
                 AtmActionButton(
-                    label    = stringResource(R.string.atm_withdraw_title),
-                    sublabel = stringResource(R.string.atm_withdraw_desc),
-                    icon     = Icons.Filled.ArrowUpward,
-                    color    = HadesOrange,
-                    onClick  = onWithdraw
-                )
-                AtmActionButton(
-                    label    = stringResource(R.string.atm_payment_title),
-                    sublabel = stringResource(R.string.atm_payment_desc),
+                    label    = "Pagar Servicio",
+                    sublabel = "Paga convenios con efectivo",
                     icon     = Icons.Filled.CreditCard,
                     color    = HadesPurple,
                     onClick  = onPayment
                 )
             }
-
-            // ── Pie: finalizar sesión ───────────────────────────────────────
-            TextButton(
-                onClick  = onLogout,
-                modifier = Modifier.padding(bottom = 32.dp)
-            ) {
-                Icon(
-                    imageVector        = Icons.Filled.ExitToApp,
-                    contentDescription = null,
-                    tint               = HadesOnDark.copy(alpha = 0.35f),
-                    modifier           = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text          = stringResource(R.string.btn_logout),
-                    fontSize      = 12.sp,
-                    letterSpacing = 1.sp,
-                    color         = HadesOnDark.copy(alpha = 0.35f)
-                )
-            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Botón de acción del cajero
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun AtmActionButton(
     label:    String,
     sublabel: String,
     icon:     ImageVector,
     color:    Color,
-    onClick:  () -> Unit
+    onClick:  () -> Unit,
+    enabled:  Boolean = true
 ) {
     Surface(
         onClick        = onClick,
+        enabled        = enabled,
         modifier       = Modifier.fillMaxWidth(),
         shape          = RoundedCornerShape(18.dp),
-        color          = HadesNavyDark,
-        border         = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+        color          = if (enabled) HadesNavyDark else HadesNavyDark.copy(alpha = 0.5f),
+        border         = androidx.compose.foundation.BorderStroke(1.dp, if (enabled) color.copy(alpha = 0.25f) else color.copy(alpha = 0.1f)),
         tonalElevation = 0.dp
     ) {
         Row(
-            modifier          = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            modifier          = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier         = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(color.copy(alpha = 0.12f)),
+                    .background(if (enabled) color.copy(alpha = 0.12f) else color.copy(alpha = 0.05f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector        = icon,
                     contentDescription = label,
-                    tint               = color,
-                    modifier           = Modifier.size(24.dp)
+                    tint               = if (enabled) color else color.copy(alpha = 0.3f),
+                    modifier           = Modifier.size(26.dp)
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
                     text          = label,
-                    fontSize      = 15.sp,
+                    fontSize      = 16.sp,
                     fontWeight    = FontWeight.Black,
                     letterSpacing = 1.sp,
-                    color         = color
+                    color         = if (enabled) color else color.copy(alpha = 0.3f)
                 )
                 Text(
                     text     = sublabel,
-                    fontSize = 11.sp,
-                    color    = HadesOnDark.copy(alpha = 0.45f)
+                    fontSize = 12.sp,
+                    color    = if (enabled) HadesOnDark.copy(alpha = 0.45f) else HadesOnDark.copy(alpha = 0.2f)
                 )
             }
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Previews  —  mismo patrón que HadesCoin original
-// ─────────────────────────────────────────────────────────────────────────────
-@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — con usuario")
+@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero")
 @Composable
 fun HomeViewPreview() {
     HadesCoinTheme {
-        HomeViewContent(
-            appUser  = AppUser(fullName = "Juan Pérez", phoneNumber = "3001234567"),
-            cargando = false
-        )
+        HomeViewContent(cargando = false)
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — sin usuario")
+@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero Bloqueado")
 @Composable
-fun HomeViewEmptyPreview() {
+fun HomeViewBlockedPreview() {
     HadesCoinTheme {
-        HomeViewContent(
-            appUser  = null,
-            cargando = false
-        )
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true, name = "Home Cajero — cargando")
-@Composable
-fun HomeViewLoadingPreview() {
-    HadesCoinTheme {
-        HomeViewContent(
-            appUser  = null,
-            cargando = true
-        )
+        HomeViewContent(cargando = false, estaBloqueado = true, segundosRestantes = 145)
     }
 }

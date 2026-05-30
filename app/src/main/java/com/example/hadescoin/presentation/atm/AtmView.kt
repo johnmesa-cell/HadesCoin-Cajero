@@ -29,19 +29,30 @@ import androidx.navigation.NavController
 import com.example.hadescoin.R
 import com.example.hadescoin.presentation.components.*
 import com.example.hadescoin.ui.theme.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun AtmView(
-    phoneNumber: String,
     operation:   AtmOperation,
     navController: NavController,
     viewModel: AtmViewModel = viewModel()
 ) {
-    val cargando       by viewModel.cargando.observeAsState(false)
-    val exito          by viewModel.exito.observeAsState()
-    val error          by viewModel.error.observeAsState()
-    val bloqueado      by viewModel.bloqueado.observeAsState(false)
-    val secsBloqueo    by viewModel.segundosBloqueo.observeAsState(0)
+    val cargando          by viewModel.cargando.observeAsState(false)
+    val exito             by viewModel.exito.observeAsState()
+    val error             by viewModel.error.observeAsState()
+    val bloqueadoHastaMs  by viewModel.bloqueadoHastaMs.observeAsState(0L)
+
+    var segundosRestantes by remember { mutableStateOf(0) }
+
+    LaunchedEffect(bloqueadoHastaMs) {
+        while (System.currentTimeMillis() < bloqueadoHastaMs) {
+            segundosRestantes = ((bloqueadoHastaMs - System.currentTimeMillis()) / 1000).toInt()
+            delay(1000)
+        }
+        segundosRestantes = 0
+    }
+
+    val estaBloqueado = bloqueadoHastaMs > System.currentTimeMillis()
 
     var showExito by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
@@ -57,8 +68,8 @@ fun AtmView(
     if (operation == AtmOperation.WITHDRAW_CODE) {
         WithdrawCodeAtmContent(
             cargando    = cargando,
-            bloqueado   = bloqueado,
-            secsBloqueo = secsBloqueo,
+            bloqueado   = estaBloqueado,
+            secsBloqueo = segundosRestantes,
             onBack      = { navController.popBackStack() },
             onExecute   = { phone, code, amount ->
                 viewModel.executeWithdrawalCode(phone, code, amount)
@@ -69,8 +80,8 @@ fun AtmView(
             operation = operation,
             cargando  = cargando,
             onBack    = { navController.popBackStack() },
-            onExecute = { amount, pin, ref ->
-                viewModel.execute(operation, phoneNumber, amount, pin, ref)
+            onExecute = { phone, amount, ref ->
+                viewModel.execute(operation, phone, amount, ref)
             }
         )
     }
@@ -106,7 +117,7 @@ fun WithdrawCodeAtmContent(
     var code       by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
     val amount     = amountText.toDoubleOrNull() ?: 0.0
-    val canSubmit  = phone.length >= 10 && code.length == 6 && amount > 0 && !bloqueado && !cargando
+    val canSubmit  = phone.length == 10 && phone.startsWith("3") && code.length == 6 && amount > 0 && !bloqueado && !cargando
 
     HadesBackground {
         Column(
@@ -219,35 +230,32 @@ fun WithdrawCodeAtmContent(
     }
 }
 
-// ─── Pantalla estándar (depósito / retiro con PIN / pago) ────────────────
+// ─── Pantalla estándar (depósito / pago) ────────────────
 @Composable
 fun AtmViewContent(
     operation: AtmOperation,
     cargando:  Boolean,
     onBack:    () -> Unit = {},
-    onExecute: (Double, String, String) -> Unit = { _, _, _ -> }
+    onExecute: (String, Double, String) -> Unit = { _, _, _ -> }
 ) {
+    var phone      by remember(operation) { mutableStateOf("") }
     var amountText by remember(operation) { mutableStateOf("") }
     var reference  by remember(operation) { mutableStateOf("") }
-    var pin        by remember(operation) { mutableStateOf("") }
 
     val amount    = amountText.toDoubleOrNull() ?: 0.0
-    val canSubmit = amount > 0 && pin.length == 4 &&
+    val canSubmit = phone.length == 10 && phone.startsWith("3") && amount > 0 &&
             (operation != AtmOperation.PAYMENT || reference.isNotBlank())
 
     val accentColor  = when (operation) {
         AtmOperation.DEPOSIT  -> HadesCyan
-        AtmOperation.WITHDRAW -> HadesOrange
         else                  -> HadesPurple
     }
     val sectionLabel = when (operation) {
         AtmOperation.DEPOSIT  -> "> ${stringResource(R.string.atm_deposit_title)}"
-        AtmOperation.WITHDRAW -> "> ${stringResource(R.string.atm_withdraw_title)}"
         else                  -> "> ${stringResource(R.string.atm_payment_title)}"
     }
     val confirmLabel = when (operation) {
         AtmOperation.DEPOSIT  -> stringResource(R.string.btn_atm_deposit)
-        AtmOperation.WITHDRAW -> stringResource(R.string.btn_atm_withdraw)
         else                  -> stringResource(R.string.btn_atm_pay)
     }
 
@@ -269,7 +277,6 @@ fun AtmViewContent(
                     Text(
                         text = when (operation) {
                             AtmOperation.DEPOSIT  -> stringResource(R.string.atm_deposit_title)
-                            AtmOperation.WITHDRAW -> stringResource(R.string.atm_withdraw_title)
                             else                  -> stringResource(R.string.atm_payment_title)
                         },
                         fontSize = 18.sp, fontWeight = FontWeight.Black, color = accentColor
@@ -279,6 +286,14 @@ fun AtmViewContent(
             Spacer(Modifier.height(32.dp))
             HadesCardBox {
                 Text(text = sectionLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, color = accentColor)
+                
+                HadesTextField(
+                    value         = phone,
+                    onValueChange = { v -> if (v.length <= 10 && v.all { c -> c.isDigit() }) phone = v },
+                    label         = "Teléfono del usuario",
+                    keyboardType  = KeyboardType.Phone
+                )
+
                 HadesTextField(
                     value = amountText, onValueChange = { if (it.length <= 12 && it.all { c -> c.isDigit() || c == '.' }) amountText = it },
                     label = stringResource(R.string.atm_label_amount), keyboardType = KeyboardType.Decimal
@@ -289,14 +304,10 @@ fun AtmViewContent(
                         label = stringResource(R.string.atm_label_reference), keyboardType = KeyboardType.Text
                     )
                 }
-                HadesTextField(
-                    value = pin, onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) pin = it },
-                    label = stringResource(R.string.atm_label_pin), isPassword = true, keyboardType = KeyboardType.NumberPassword
-                )
                 Spacer(Modifier.height(4.dp))
                 HadesButton(
                     text = confirmLabel, textCargando = stringResource(R.string.text_loading),
-                    onClick = { onExecute(amount, pin, reference) },
+                    onClick = { onExecute(phone, amount, reference) },
                     enabled = canSubmit && !cargando, cargando = cargando
                 )
             }

@@ -7,8 +7,10 @@ interface WalletRepository {
     suspend fun getWalletData(phoneNumber: String): Pair<AppUser?, List<WalletTransaction>>
     suspend fun getUserByPhone(phoneNumber: String): AppUser?
     suspend fun deposit(phoneNumber: String, amount: Double, pin: String): Result<Unit>
+    suspend fun depositAtm(phoneNumber: String, amount: Double): Result<Unit>
     suspend fun withdraw(phoneNumber: String, amount: Double, pin: String): Result<Unit>
     suspend fun payment(phoneNumber: String, amount: Double, reference: String, pin: String): Result<Unit>
+    suspend fun paymentAtm(phoneNumber: String, amount: Double, reference: String): Result<Unit>
 
     /**
      * Procesa un retiro en cajero usando código temporal.
@@ -25,4 +27,6 @@ interface WalletRepository {
         code:        String,
         amount:      Double
     ): Result<Unit>
+
+    suspend fun markWithdrawalFailed(phoneNumber: String)
 }

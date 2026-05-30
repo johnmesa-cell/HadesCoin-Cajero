@@ -8,7 +8,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.hadescoin.presentation.atm.AtmOperation
 import com.example.hadescoin.presentation.atm.AtmView
-import com.example.hadescoin.presentation.auth.login.LoginView
 import com.example.hadescoin.presentation.home.HomeView
 
 @Composable
@@ -17,37 +16,25 @@ fun AppNavigation() {
 
     NavHost(
         navController    = navController,
-        startDestination = "login"
+        startDestination = "home"
     ) {
-        composable("login") {
-            LoginView(navController = navController)
+        composable("home") {
+            HomeView(navController = navController)
         }
 
         composable(
-            route     = "home/{phoneNumber}",
-            arguments = listOf(navArgument("phoneNumber") { type = NavType.StringType })
-        ) { back ->
-            HomeView(
-                phoneNumber   = back.arguments?.getString("phoneNumber") ?: "",
-                navController = navController
-            )
-        }
-
-        composable(
-            route     = "atm/{phoneNumber}/{operation}",
+            route     = "atm/{operation}",
             arguments = listOf(
-                navArgument("phoneNumber") { type = NavType.StringType },
-                navArgument("operation")   { type = NavType.StringType }
+                navArgument("operation") { type = NavType.StringType }
             )
         ) { back ->
-            val phone = back.arguments?.getString("phoneNumber") ?: ""
-            val op    = when (back.arguments?.getString("operation")) {
-                "WITHDRAW" -> AtmOperation.WITHDRAW
-                "PAYMENT"  -> AtmOperation.PAYMENT
-                else       -> AtmOperation.DEPOSIT
+            val opStr = back.arguments?.getString("operation") ?: "DEPOSIT"
+            val op = try {
+                AtmOperation.valueOf(opStr)
+            } catch (_: Exception) {
+                AtmOperation.DEPOSIT
             }
             AtmView(
-                phoneNumber   = phone,
                 operation     = op,
                 navController = navController
             )
