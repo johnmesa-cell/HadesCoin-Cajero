@@ -1,46 +1,92 @@
-# Paquete: domain
+# Capa de Dominio — HadesCoin Cajero
 
-## Responsabilidad
-Es la capa central (el núcleo) de la Clean Architecture. Aquí residen las reglas de negocio de la billetera, las entidades puras y las abstracciones (interfaces) de los repositorios. Este paquete es totalmente independiente de Android, de Firebase o de cualquier otro framework externo.
+## Descripción general
 
-## Archivos
+La capa de dominio define los **contratos** (interfaces de repositorio) y
+los **casos de uso** que ejecuta el cajero. No contiene ninguna referencia
+a Firebase, Android o Compose — es puro Kotlin.
 
-### AppUser.kt
-- **Qué es:** Entidad de negocio (modelo de datos puro).
-- **Qué hace:** Define la estructura fundamental de un usuario en el sistema (ID, documento, teléfono, nombre, PIN, saldo y fecha de creación).
-- **Interactúa con:** Las interfaces de los repositorios y los Casos de Uso.
+---
 
-### WalletTransaction.kt
-- **Qué es:** Entidad de negocio.
-- **Qué hace:** Modela los datos de una transferencia o movimiento financiero (emisor, receptor, monto, tipo y dirección).
-- **Interactúa con:** La interfaz `WalletRepository` y los Casos de Uso transaccionales.
+## Modelo: `ServiceItem`
 
-### AuthRepository.kt
-- **Qué es:** Interfaz que define el contrato del repositorio de autenticación.
-- **Qué hace:** Establece los métodos obligatorios para iniciar sesión (`login`) y registrar usuarios (`register`), sin importar qué base de datos se use por debajo.
-- **Interactúa con:** La entidad `AppUser`. Es consumida por los Casos de Uso de autenticación e implementada en la capa `data`.
+Representa una categoría de servicio pagable.
 
-### WalletRepository.kt
-- **Qué es:** Interfaz que define el contrato del repositorio principal de la billetera.
-- **Qué hace:** Establece los métodos necesarios para obtener el resumen de la cuenta (`getWalletData`), buscar usuarios por teléfono y realizar transferencias de dinero (`transferFunds`).
-- **Interactúa con:** `AppUser` y `WalletTransaction`. Es consumida por los Casos de Uso transaccionales e implementada en la capa `data`.
+```kotlin
+data class ServiceItem(
+    val id:       String,
+    val icono:    ImageVector,
+    val nombreRes: Int           // @StringRes
+)
+```
 
-### RegisterUseCase.kt
-- **Qué es:** Caso de uso responsable del registro de usuarios.
-- **Qué hace:** Recibe los datos de un usuario nuevo a través de la entidad `AppUser` y orquesta la operación de guardado en el sistema delegándola al repositorio.
-- **Interactúa con:** La entidad `AppUser` y la interfaz `AuthRepository`.
+### Servicios disponibles
 
-### GetWalletDataUseCase.kt
-- **Qué es:** Caso de uso específico de lectura de datos.
-- **Qué hace:** Ejecuta la acción de recuperar la información principal de la billetera del usuario y su historial de transacciones utilizando su número de teléfono.
-- **Interactúa con:** La interfaz `WalletRepository`.
+| ID | Ícono Material | String resource |
+|---|---|---|
+| `energia` | `ElectricBolt` | `R.string.payment_servicio_energia` |
+| `agua` | `WaterDrop` | `R.string.payment_servicio_agua` |
+| `gas` | `LocalFireDepartment` | `R.string.payment_servicio_gas` |
+| `internet` | `Wifi` | `R.string.payment_servicio_internet` |
+| `telefono` | `PhoneAndroid` | `R.string.payment_servicio_telefono` |
+| `tv` | `Tv` | `R.string.payment_servicio_tv` |
+| `gimnasio` | `FitnessCenter` | `R.string.payment_servicio_gimnasio` |
+| `streaming` | `PlayCircle` | `R.string.payment_servicio_streaming` |
+| `seguro` | `Shield` | `R.string.payment_servicio_seguro` |
+| `matricula` | `School` | `R.string.payment_servicio_matricula` |
 
-### LoginUseCase.kt
-- **Qué es:** Caso de uso para el inicio de sesión.
-- **Qué hace:** Valida las credenciales del usuario (teléfono y PIN) delegando la verificación al repositorio de autenticación.
-- **Interactúa con:** La interfaz `AuthRepository`.
+---
 
-### TransferUseCase.kt
-- **Qué es:** Caso de uso que maneja las transferencias de fondos.
-- **Qué hace:** Ejecuta la lógica para enviar dinero entre usuarios, validando el monto a transferir y el PIN de seguridad.
-- **Interactúa con:** La interfaz `WalletRepository`.
+## Contrato del repositorio: `WalletRepository`
+
+```kotlin
+interface WalletRepository {
+    suspend fun deposit(phoneNumber: String, amount: Double): Result<Unit>
+    suspend fun payment(phoneNumber: String, amount: Double, reference: String, pin: String): Result<Unit>
+    suspend fun processWithdrawal(phoneNumber: String, code: String, amount: Double): Result<Unit>
+    suspend fun markWithdrawalFailed(phoneNumber: String)
+}
+```
+
+Todas las operaciones retornan `Result<Unit>` para que el ViewModel
+maneje éxito y fallo de forma uniforme con `.fold(onSuccess, onFailure)`.
+
+---
+
+## Casos de uso
+
+### `AtmDepositUseCase`
+
+```kotlin
+class AtmDepositUseCase(private val repo: WalletRepository) {
+    suspend operator fun invoke(phone: String, amount: Double) =
+        repo.deposit(phone, amount)
+}
+```
+
+Validaciones previas en el ViewModel: `amount > 0`.
+
+---
+
+### `AtmPaymentUseCase`
+
+> ⚠️ Este caso de uso existe pero la operación de pago con PIN
+> se ejecuta directamente via `WalletRepository.payment()` desde el ViewModel
+> para poder incluir el PIN en la llamada.
+
+---
+
+### `ProcessWithdrawalUseCase`
+
+```kotlin
+class ProcessWithdrawalUseCase(private val repo: WalletRepository) {
+    suspend operator fun invoke(phone: String, code: String, amount: Double) =
+        repo.processWithdrawal(phone, code, amount)
+}
+```
+
+Validaciones previas en el ViewModel:
+- `phone` no vacío
+- `code.length == 6`
+- `amount > 0`
+- Terminal no bloqueado por intentos fallidos

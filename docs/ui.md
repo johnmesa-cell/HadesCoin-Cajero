@@ -1,21 +1,74 @@
-# Paquete: ui
+# Componentes UI — HadesCoin Cajero
 
-## Responsabilidad
-Contiene el sistema de diseño visual de la aplicación. Define la paleta de colores, la tipografía y el tema global que le dan la estética cyberpunk oscura a HadesCoin. Es consumido por todas las pantallas de la capa `presentation`.
+## Sistema de diseño
 
-## Archivos
+El cajero comparte la misma paleta y componentes base que la app principal HadesCoin.
+Todos los componentes están en `presentation/components/`.
 
-### Color.kt
-- **Qué es:** Archivo de definición cromática global de la interfaz de usuario.
-- **Qué hace:** Centraliza las constantes de color hexadecimales que componen la estética cyberpunk oscura del proyecto, configurando tonos clave como `HadesNavy`, `HadesOrange`, `HadesPurple` y destellos de `HadesCyan`.
-- **Interactúa con:** `Theme.kt` para poblar el mapa de colores del sistema de diseño.
+---
 
-### Theme.kt
-- **Qué es:** Componente estructural de Compose que define la configuración del tema visual de la aplicación basado en Material Design 3.
-- **Qué hace:** Configura un esquema de colores únicamente oscuro (`HadesDarkColorScheme`), asignando roles semánticos específicos a la paleta (colores para superficies de tarjetas, botones principales de acción, bordes y fondos) y expone la función composable `HadesCoinTheme`.
-- **Interactúa con:** `Color.kt` (del cual extrae los colores), `Type.kt` (para inyectar los estilos tipográficos) y todas las pantallas de la interfaz que requieran envolverse bajo este estilo visual.
+## Paleta de colores
 
-### Type.kt
-- **Qué es:** Archivo de configuración y estilos tipográficos del proyecto.
-- **Qué hace:** Inicializa y expone los atributos del objeto `Typography` de Material 3, estableciendo las dimensiones base, espaciados y configuraciones de lectura estándar para el cuerpo de texto principal de la aplicación.
-- **Interactúa con:** `Theme.kt` para acoplar las configuraciones de texto dentro del tema global.
+| Token | Color | Uso |
+|---|---|---|
+| `HadesBlack` | `#0A0A0F` | Fondo base |
+| `HadesNavyDark` | `#0F0F1A` | Tarjetas y contenedores |
+| `HadesPurple` | `#7C3AED` | Color primario (pagos, títulos) |
+| `HadesCyan` | `#06B6D4` | Éxito, depósito |
+| `HadesOrange` | `#F97316` | Retiro con código, advertencias |
+| `HadesOnDark` | `#E2E8F0` | Texto sobre fondos oscuros |
+
+---
+
+## Componentes reutilizables
+
+### `HadesScreen`
+Contenedor raíz de **todas las pantallas**. Combina el fondo con gradiente
+(`HadesBackground`) con `safeDrawingPadding()` para respetar automáticamente
+la barra de estado y la barra de navegación del dispositivo.
+
+```kotlin
+@Composable
+fun HadesScreen(content: @Composable BoxScope.() -> Unit) {
+    HadesBackground {
+        Box(
+            modifier = Modifier.fillMaxSize().safeDrawingPadding(),
+            content  = content
+        )
+    }
+}
+```
+
+### `HadesBackground`
+Gradiente vertical `HadesBlack → HadesNavyDark → HadesBlack` sobre un `Box` de pantalla completa.
+Usado internamente por `HadesScreen`.
+
+### `HadesTextField`
+Campo de texto con estilo oscuro. Parámetros relevantes:
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `value` | `String` | Valor actual |
+| `onValueChange` | `(String) -> Unit` | Callback de cambio |
+| `label` | `String` | Etiqueta flotante |
+| `isPassword` | `Boolean` | Enmascara el texto con `PasswordVisualTransformation` |
+| `keyboardType` | `KeyboardType` | Tipo de teclado |
+| `enabled` | `Boolean` | Habilita/deshabilita el campo |
+
+### `HadesButton`
+Botón primario con soporte para estado de carga.
+
+| Parámetro | Descripción |
+|---|---|
+| `text` | Texto normal |
+| `textCargando` | Texto mientras `cargando == true` |
+| `cargando` | Muestra spinner y deshabilita el botón |
+| `enabled` | Control externo de habilitación |
+
+### `HadesCardBox`
+Contenedor tipo card con fondo `HadesNavyDark`, bordes redondeados y padding estándar.
+Usado para agrupar formularios en las pantallas de depósito y retiro.
+
+### `AlertDialogs`
+- `ShowLoadingAlertDialog()` — spinner de carga no cancelable.
+- `ShowMessageAlertDialog(title, text, onConfirmation)` — diálogo de error genérico.

@@ -1,14 +1,51 @@
-# Paquete: di
+# Inyección de Dependencias — HadesCoin Cajero
 
-## Responsabilidad
-Contiene el mecanismo de Inyección de Dependencias manual del proyecto mediante un **ServiceLocator**. Su rol es proveer las instancias necesarias (repositorios, casos de uso, fuentes de datos de Firebase) de forma centralizada, sin necesidad de librerías externas como Hilt o Dagger.
+## Patrón utilizado: ServiceLocator manual
 
-## Archivos
+El cajero usa un `ServiceLocator` singleton en lugar de Hilt o Koin,
+manteniendo el proyecto liviano y sin procesadores de anotaciones.
 
-### ServiceLocator.kt
-- **Qué es:** Objeto singleton que actúa como contenedor de dependencias.
-- **Qué hace:** Instancia de forma lazy (perezosa) todas las dependencias de la aplicación: `FirebaseUserDataSource`, `FirebaseTransactionDataSource`, los repositorios y los casos de uso. Expone métodos `provide*` que son consumidos por los ViewModels.
-- **Interactúa con:** Todas las capas: `data` (DataSources y Repositorios), `domain` (Casos de uso) y `presentation` (ViewModels).
+---
 
-## Diagrama de dependencias
-ServiceLocator → Instancia y provee dependencias a presentation (ViewModels) desde data y domain
+## ServiceLocator.kt
+
+```kotlin
+object ServiceLocator {
+    fun provideWalletRepository(): WalletRepository
+    fun provideAtmDepositUseCase(): AtmDepositUseCase
+    fun provideAtmPaymentUseCase(): AtmPaymentUseCase
+    fun provideProcessWithdrawalUseCase(): ProcessWithdrawalUseCase
+    fun provideBlockLocalDataSource(): BlockLocalDataSource
+}
+```
+
+## Grafo de dependencias
+
+```
+AtmViewModel
+  ├── AtmDepositUseCase
+  │     └── WalletRepository
+  │           └── FirebaseWalletDataSource
+  ├── AtmPaymentUseCase
+  │     └── WalletRepository
+  ├── ProcessWithdrawalUseCase
+  │     └── WalletRepository
+  ├── BlockLocalDataSource   (SharedPreferences)
+  └── WalletRepository      (acceso directo para payment con PIN)
+```
+
+---
+
+## Instanciación en el ViewModel
+
+```kotlin
+class AtmViewModel(
+    private val depositUseCase:    AtmDepositUseCase        = ServiceLocator.provideAtmDepositUseCase(),
+    private val processWithdrawal: ProcessWithdrawalUseCase = ServiceLocator.provideProcessWithdrawalUseCase(),
+    private val blockDataSource:   BlockLocalDataSource     = ServiceLocator.provideBlockLocalDataSource(),
+    private val repository:        WalletRepository         = ServiceLocator.provideWalletRepository()
+) : ViewModel()
+```
+
+Los parámetros tienen valores por defecto, lo que permite inyectar mocks
+en tests sin modificar la clase.
