@@ -45,13 +45,49 @@
     <string name="atm_deposit_desc">Ingresa dinero a tu cuenta</string>
     <string name="atm_withdraw_title">RETIRO</string>
     <string name="atm_withdraw_desc">Extrae efectivo de tu cuenta</string>
-    <string name="atm_payment_title">PAGO</string>
+    <string name="atm_payment_title">PAGO DE SERVICIOS</string>
     <string name="atm_payment_desc">Paga servicios o referencias</string>
     <string name="atm_label_amount">Monto</string>
-    <string name="atm_label_reference">Referencia de pago</string>
+    <string name="atm_label_reference">Referencia / Número de contrato</string>
     <string name="atm_label_pin">PIN de confirmación</string>
+    <string name="atm_label_phone">Teléfono del usuario</string>
     <string name="btn_atm_deposit">[ CONFIRMAR DEPÓSITO ]</string>
     <string name="btn_atm_withdraw">[ CONFIRMAR RETIRO ]</string>
     <string name="btn_atm_pay">[ CONFIRMAR PAGO ]</string>
+    <string name="btn_continue">CONTINUAR</string>
+    <string name="btn_back">VOLVER</string>
+
+    <!-- ══════════════════════════════════════════════════
+         PAGO DE SERVICIOS — Flujo de 3 pasos
+    ══════════════════════════════════════════════════ -->
+    <string name="payment_paso1_titulo">Selecciona el servicio a pagar</string>
+    <string name="payment_paso2_titulo">Ingresa los datos del pago</string>
+    <string name="payment_paso3_titulo">Confirmar pago</string>
+    <string name="payment_referencia_hint">Referencia / Número de contrato</string>
+    <string name="payment_monto_hint">Monto a pagar</string>
+    <string name="payment_phone_hint">Teléfono del titular de la cuenta</string>
+    <string name="payment_pin_hint">PIN del usuario (4 dígitos)</string>
+    <string name="payment_resumen_servicio">Servicio</string>
+    <string name="payment_resumen_referencia">Referencia</string>
+    <string name="payment_resumen_monto">Monto</string>
+    <string name="payment_resumen_usuario">Usuario</string>
+    <string name="payment_error_referencia">La referencia no puede estar vacía</string>
+    <string name="payment_error_monto">Ingresa un monto válido mayor a cero</string>
+    <string name="payment_error_phone">Ingresa un número de teléfono válido</string>
+    <string name="payment_error_pin">El PIN debe tener 4 dígitos</string>
+    <string name="payment_exito_titulo">¡Pago realizado!</string>
+    <string name="payment_exito_mensaje">El pago fue procesado exitosamente.</string>
+
+    <!-- Nombres de servicios -->
+    <string name="payment_servicio_energia">Energía eléctrica</string>
+    <string name="payment_servicio_agua">Agua</string>
+    <string name="payment_servicio_gas">Gas</string>
+    <string name="payment_servicio_internet">Internet</string>
+    <string name="payment_servicio_telefono">Teléfono / Móvil</string>
+    <string name="payment_servicio_tv">TV / Cable</string>
+    <string name="payment_servicio_gimnasio">Gimnasio</string>
+    <string name="payment_servicio_streaming">Streaming</string>
+    <string name="payment_servicio_seguro">Seguro</string>
+    <string name="payment_servicio_matricula">Matrícula</string>
 
 </resources>
