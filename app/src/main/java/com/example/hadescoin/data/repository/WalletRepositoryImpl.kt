@@ -27,13 +27,13 @@ class WalletRepositoryImpl(
 
     private suspend fun markAsFailed(phoneNumber: String, storedTxId: String) {
         if (storedTxId.isNotBlank()) {
-            transactionDataSource.updateTransactionField(storedTxId, "type", "WITHDRAWAL_FAILED")
+            transactionDataSource.updateTransactionField(storedTxId, "type",      "WITHDRAWAL_FAILED")
             transactionDataSource.updateTransactionField(storedTxId, "timestamp", Instant.now().toString())
         }
-        userDataSource.updateUserField(phoneNumber, "withdrawalCode",   "")
-        userDataSource.updateUserField(phoneNumber, "withdrawalAmount", "")
-        userDataSource.updateUserField(phoneNumber, "withdrawalExpiry", "")
-        userDataSource.updateUserField(phoneNumber, "withdrawalTxId",   "")
+        userDataSource.updateUserField(phoneNumber, "withdrawalCode",      "")
+        userDataSource.updateUserField(phoneNumber, "withdrawalAmount",    "")
+        userDataSource.updateUserField(phoneNumber, "withdrawalExpiresAt", "")   // ← alineado con proyecto principal
+        userDataSource.updateUserField(phoneNumber, "withdrawalTxId",      "")
     }
 
     override suspend fun markWithdrawalFailed(phoneNumber: String) {
@@ -101,10 +101,12 @@ class WalletRepositoryImpl(
             if (amount <= 0) return Result.failure(Exception("El monto debe ser mayor a cero"))
             userDataSource.updateBalance(phoneNumber, user.balance + amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"  to phoneNumber, "receiverId" to phoneNumber,
-                "amount"    to amount,      "type"       to "DEPOSIT",
-                "source"    to "ATM",
-                "timestamp" to Instant.now().toString()
+                "senderId"   to phoneNumber,
+                "receiverId" to phoneNumber,
+                "amount"     to amount,
+                "type"       to "DEPOSIT",
+                "source"     to "ATM",
+                "timestamp"  to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -120,9 +122,11 @@ class WalletRepositoryImpl(
             if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"  to phoneNumber, "receiverId" to phoneNumber,
-                "amount"    to amount,      "type"       to "WITHDRAW",
-                "timestamp" to Instant.now().toString()
+                "senderId"   to phoneNumber,
+                "receiverId" to phoneNumber,
+                "amount"     to amount,
+                "type"       to "WITHDRAW",
+                "timestamp"  to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -148,9 +152,12 @@ class WalletRepositoryImpl(
             if (reference.isBlank())   return Result.failure(Exception("La referencia no puede estar vacía"))
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
             transactionDataSource.saveTransaction(mapOf(
-                "senderId"  to phoneNumber, "receiverId" to reference,
-                "amount"    to amount,      "type"       to "PAYMENT",
-                "timestamp" to Instant.now().toString()
+                "senderId"   to phoneNumber,
+                "receiverId" to phoneNumber,   // ← corregido: era reference, ahora es el propio usuario
+                "amount"     to amount,
+                "type"       to "PAYMENT",
+                "source"     to reference,      // ← referencia del servicio va en source, como en el proyecto principal
+                "timestamp"  to Instant.now().toString()
             ))
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -168,7 +175,7 @@ class WalletRepositoryImpl(
 
             val storedCode   = snapshot.child("withdrawalCode").getValue(String::class.java)               ?: ""
             val storedAmount = snapshot.child("withdrawalAmount").getValue(String::class.java)?.toDoubleOrNull() ?: 0.0
-            val storedExpiry = snapshot.child("withdrawalExpiry").getValue(String::class.java)              ?: ""
+            val storedExpiry = snapshot.child("withdrawalExpiresAt").getValue(String::class.java)          ?: ""  // ← alineado
             val storedTxId   = snapshot.child("withdrawalTxId").getValue(String::class.java)               ?: ""
 
             if (storedCode.isBlank())  return Result.failure(Exception("No hay un código de retiro generado para este usuario"))
@@ -182,7 +189,7 @@ class WalletRepositoryImpl(
                 }
             }
 
-            if (amount > storedAmount) return Result.failure(Exception("El monto supera el autorizado (máx: $${"%,.0f".format(storedAmount)})"))
+            if (amount > storedAmount) return Result.failure(Exception("El monto supera el autorizado (máx: $\${\"%,.0f\".format(storedAmount)})"))
             if (user.balance < amount) return Result.failure(Exception("Saldo insuficiente"))
 
             userDataSource.updateBalance(phoneNumber, user.balance - amount)
@@ -193,10 +200,10 @@ class WalletRepositoryImpl(
                 transactionDataSource.updateTransactionField(storedTxId, "timestamp", Instant.now().toString())
             }
 
-            userDataSource.updateUserField(phoneNumber, "withdrawalCode",   "")
-            userDataSource.updateUserField(phoneNumber, "withdrawalAmount", "")
-            userDataSource.updateUserField(phoneNumber, "withdrawalExpiry", "")
-            userDataSource.updateUserField(phoneNumber, "withdrawalTxId",   "")
+            userDataSource.updateUserField(phoneNumber, "withdrawalCode",      "")
+            userDataSource.updateUserField(phoneNumber, "withdrawalAmount",    "")
+            userDataSource.updateUserField(phoneNumber, "withdrawalExpiresAt", "")   // ← alineado
+            userDataSource.updateUserField(phoneNumber, "withdrawalTxId",      "")
 
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }

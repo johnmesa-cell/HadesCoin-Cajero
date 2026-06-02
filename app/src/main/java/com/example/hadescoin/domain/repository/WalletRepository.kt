@@ -16,11 +16,11 @@ interface WalletRepository {
      * Procesa un retiro en cajero usando código temporal.
      * Valida:
      *  - Que el usuario exista
-     *  - Que el código coincida con withdrawalCode en Firebase
-     *  - Que no haya expirado (withdrawalExpiry)
-     *  - Que el monto solicitado sea <= withdrawalAmount autorizado
+     *  - Que el código coincida con [withdrawalCode] en Firebase
+     *  - Que no haya expirado ([withdrawalExpiresAt])
+     *  - Que el monto solicitado sea <= [withdrawalAmount] autorizado
      *  - Que haya saldo suficiente
-     * Si todo es válido: descuenta saldo, guarda TX WITHDRAWAL_COMPLETED, limpia campos withdrawal.
+     * Si todo es válido: descuenta saldo, actualiza TX a WITHDRAWAL_COMPLETED, limpia campos withdrawal.
      */
     suspend fun processWithdrawal(
         phoneNumber: String,
