@@ -15,16 +15,17 @@ import com.example.hadescoin.domain.usecase.AtmPaymentUseCase
 import com.example.hadescoin.domain.usecase.ProcessWithdrawalUseCase
 import com.example.hadescoin.domain.repository.WalletRepository
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
 
 enum class AtmOperation { DEPOSIT, PAYMENT, WITHDRAW_CODE }
 
 class AtmViewModel(
-    private val depositUseCase:    AtmDepositUseCase     = ServiceLocator.provideAtmDepositUseCase(),
-    // paymentUseCase ya no se usa para PAYMENT — ahora se usa WalletRepository.payment() con PIN
-    private val paymentUseCase:    AtmPaymentUseCase     = ServiceLocator.provideAtmPaymentUseCase(),
+    private val depositUseCase:    AtmDepositUseCase        = ServiceLocator.provideAtmDepositUseCase(),
+    private val paymentUseCase:    AtmPaymentUseCase        = ServiceLocator.provideAtmPaymentUseCase(),
     private val processWithdrawal: ProcessWithdrawalUseCase = ServiceLocator.provideProcessWithdrawalUseCase(),
-    private val blockDataSource:   BlockLocalDataSource  = ServiceLocator.provideBlockLocalDataSource(),
-    private val repository:        WalletRepository      = ServiceLocator.provideWalletRepository()
+    private val blockDataSource:   BlockLocalDataSource     = ServiceLocator.provideBlockLocalDataSource(),
+    private val repository:        WalletRepository         = ServiceLocator.provideWalletRepository()
 ) : ViewModel() {
 
     private val _cargando = MutableLiveData(false)
@@ -36,21 +37,24 @@ class AtmViewModel(
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
-    // ── Lista de servicios disponibles (igual que en el proyecto principal) ──
+    private val fmt = NumberFormat.getNumberInstance(Locale("es", "CO")).apply { maximumFractionDigits = 0 }
+    private fun fmtMonto(amount: Double) = fmt.format(amount)
+
+    // ── Lista de servicios disponibles ───────────────────────────────────────
     val servicios: List<ServiceItem> = listOf(
-        ServiceItem("energia",   Icons.Filled.ElectricBolt,         R.string.payment_servicio_energia),
-        ServiceItem("agua",      Icons.Filled.WaterDrop,            R.string.payment_servicio_agua),
-        ServiceItem("gas",       Icons.Filled.LocalFireDepartment,  R.string.payment_servicio_gas),
-        ServiceItem("internet",  Icons.Filled.Wifi,                 R.string.payment_servicio_internet),
-        ServiceItem("telefono",  Icons.Filled.PhoneAndroid,         R.string.payment_servicio_telefono),
-        ServiceItem("tv",        Icons.Filled.Tv,                   R.string.payment_servicio_tv),
-        ServiceItem("gimnasio",  Icons.Filled.FitnessCenter,        R.string.payment_servicio_gimnasio),
-        ServiceItem("streaming", Icons.Filled.PlayCircle,           R.string.payment_servicio_streaming),
-        ServiceItem("seguro",    Icons.Filled.Shield,               R.string.payment_servicio_seguro),
-        ServiceItem("matricula", Icons.Filled.School,               R.string.payment_servicio_matricula)
+        ServiceItem("energia",   Icons.Filled.ElectricBolt,        R.string.payment_servicio_energia),
+        ServiceItem("agua",      Icons.Filled.WaterDrop,           R.string.payment_servicio_agua),
+        ServiceItem("gas",       Icons.Filled.LocalFireDepartment, R.string.payment_servicio_gas),
+        ServiceItem("internet",  Icons.Filled.Wifi,                R.string.payment_servicio_internet),
+        ServiceItem("telefono",  Icons.Filled.PhoneAndroid,        R.string.payment_servicio_telefono),
+        ServiceItem("tv",        Icons.Filled.Tv,                  R.string.payment_servicio_tv),
+        ServiceItem("gimnasio",  Icons.Filled.FitnessCenter,       R.string.payment_servicio_gimnasio),
+        ServiceItem("streaming", Icons.Filled.PlayCircle,          R.string.payment_servicio_streaming),
+        ServiceItem("seguro",    Icons.Filled.Shield,              R.string.payment_servicio_seguro),
+        ServiceItem("matricula", Icons.Filled.School,              R.string.payment_servicio_matricula)
     )
 
-    // ── Bloqueo temporal por intentos fallidos (retiro con código) ──────────
+    // ── Bloqueo temporal por intentos fallidos ───────────────────────────
     val MAX_ATTEMPTS      = 3
     val BLOCK_DURATION_MS = 3 * 60 * 1000L
 
@@ -73,20 +77,20 @@ class AtmViewModel(
         }
     }
 
-    // ── Depósito ATM (sin PIN) ───────────────────────────────────────────────
+    // ── Depósito ATM (sin PIN) ──────────────────────────────────────────
     fun executeDeposit(phoneNumber: String, amount: Double) {
         if (amount <= 0) { _error.value = "El monto debe ser mayor a cero"; return }
         viewModelScope.launch {
             _cargando.value = true
             depositUseCase(phoneNumber, amount).fold(
-                onSuccess = { _exito.value = "Depósito de $\${\"%,.0f\".format(amount)} realizado con éxito." },
+                onSuccess = { _exito.value = "Depósito de \$${fmtMonto(amount)} realizado con éxito." },
                 onFailure = { _error.value = it.message }
             )
             _cargando.value = false
         }
     }
 
-    // ── Pago de servicio con PIN (validación en Firebase) ───────────────────
+    // ── Pago de servicio con PIN ───────────────────────────────────────
     fun executePayment(
         phoneNumber: String,
         amount:      Double,
@@ -99,16 +103,15 @@ class AtmViewModel(
         if (pin.length != 4)          { _error.value = "El PIN debe tener 4 dígitos"; return }
         viewModelScope.launch {
             _cargando.value = true
-            // Usa payment() con PIN — Firebase valida que el PIN coincida
             repository.payment(phoneNumber, amount, reference, pin).fold(
-                onSuccess = { _exito.value = "Pago de $\${\"%,.0f\".format(amount)} registrado con éxito." },
+                onSuccess = { _exito.value = "Pago de \$${fmtMonto(amount)} registrado con éxito." },
                 onFailure = { _error.value = it.message }
             )
             _cargando.value = false
         }
     }
 
-    // ── Retiro con código temporal ───────────────────────────────────────────
+    // ── Retiro con código temporal ───────────────────────────────────────
     fun executeWithdrawalCode(phoneNumber: String, code: String, amount: Double) {
         val ahora = System.currentTimeMillis()
         val hasta = blockDataSource.getBlockedUntilMs()
@@ -134,13 +137,12 @@ class AtmViewModel(
 
         viewModelScope.launch {
             _cargando.value = true
-            val result = processWithdrawal(phoneNumber, code, amount)
-            result.fold(
+            processWithdrawal(phoneNumber, code, amount).fold(
                 onSuccess = {
                     blockDataSource.clear()
                     _bloqueado.value        = false
                     _bloqueadoHastaMs.value = 0L
-                    _exito.value = "Retiro de $\${\"%,.0f\".format(amount)} procesado con éxito."
+                    _exito.value = "Retiro de \$${fmtMonto(amount)} procesado con éxito."
                 },
                 onFailure = { e ->
                     val intentos = blockDataSource.getFailedAttempts() + 1
@@ -152,7 +154,8 @@ class AtmViewModel(
                         _bloqueadoHastaMs.value = hastaNuevo
                         _segundosBloqueo.value  = (BLOCK_DURATION_MS / 1000).toInt()
                         repository.markWithdrawalFailed(phoneNumber)
-                        _error.value = "3 intentos fallidos. Bloqueado por ${BLOCK_DURATION_MS / 60000} minuto(s)."
+                        val mins = BLOCK_DURATION_MS / 60000
+                        _error.value = "3 intentos fallidos. Bloqueado por $mins minuto(s)."
                     } else {
                         _error.value = "${e.message} (intento $intentos/$MAX_ATTEMPTS)"
                     }

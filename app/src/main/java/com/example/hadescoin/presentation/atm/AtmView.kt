@@ -146,7 +146,7 @@ fun PaymentAtmContent(
     var phone                by remember { mutableStateOf("") }
     var pin                  by remember { mutableStateOf("") }
 
-    HadesBackground {
+    HadesScreen {   // ← HadesBackground + safeDrawingPadding
         when (paso) {
             // ── Paso 1: Grid de categorías ──────────────────────────────────
             1 -> LazyVerticalGrid(
@@ -157,7 +157,6 @@ fun PaymentAtmContent(
             ) {
                 item(span = { GridItemSpan(2) }) {
                     Column {
-                        Spacer(Modifier.height(24.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = onBack) {
                                 Icon(
@@ -173,7 +172,7 @@ fun PaymentAtmContent(
                                 Text(stringResource(R.string.atm_payment_title), fontSize = 18.sp, fontWeight = FontWeight.Black, color = HadesPurple)
                             }
                         }
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
                         Text(
                             text       = stringResource(R.string.payment_paso1_titulo),
                             fontSize   = 14.sp,
@@ -191,10 +190,7 @@ fun PaymentAtmContent(
                             .clip(RoundedCornerShape(14.dp))
                             .background(HadesNavyDark)
                             .border(1.dp, HadesOnDark.copy(alpha = 0.1f), RoundedCornerShape(14.dp))
-                            .clickable {
-                                servicioSeleccionado = servicio
-                                paso = 2
-                            }
+                            .clickable { servicioSeleccionado = servicio; paso = 2 }
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -226,10 +222,9 @@ fun PaymentAtmContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Spacer(Modifier.height(24.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { paso = 1 }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = HadesPurple, modifier = Modifier.size(22.dp))
@@ -240,7 +235,6 @@ fun PaymentAtmContent(
                         Text(stringResource(R.string.atm_payment_title), fontSize = 18.sp, fontWeight = FontWeight.Black, color = HadesPurple)
                     }
                 }
-
                 servicioSeleccionado?.let { srv ->
                     Box(
                         modifier = Modifier
@@ -256,9 +250,7 @@ fun PaymentAtmContent(
                         }
                     }
                 }
-
                 Text(stringResource(R.string.payment_paso2_titulo), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = HadesOnDark.copy(alpha = 0.7f))
-
                 HadesTextField(
                     value         = referencia,
                     onValueChange = { if (it.length <= 40) referencia = it },
@@ -271,7 +263,6 @@ fun PaymentAtmContent(
                     label         = stringResource(R.string.payment_monto_hint),
                     keyboardType  = KeyboardType.Decimal
                 )
-
                 Spacer(Modifier.weight(1f))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HadesButton(text = stringResource(R.string.btn_back), onClick = { paso = 1 }, modifier = Modifier.weight(1f))
@@ -289,10 +280,9 @@ fun PaymentAtmContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Spacer(Modifier.height(24.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { paso = 2 }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = HadesPurple, modifier = Modifier.size(22.dp))
@@ -303,8 +293,6 @@ fun PaymentAtmContent(
                         Text(stringResource(R.string.payment_paso3_titulo), fontSize = 18.sp, fontWeight = FontWeight.Black, color = HadesPurple)
                     }
                 }
-
-                // Resumen del pago
                 servicioSeleccionado?.let { srv ->
                     Box(
                         modifier = Modifier
@@ -336,13 +324,11 @@ fun PaymentAtmContent(
                         }
                     }
                 }
-
                 Text(
                     text     = "El usuario debe ingresar su teléfono y PIN para autorizar el pago.",
                     fontSize = 11.sp,
                     color    = HadesOnDark.copy(alpha = 0.45f)
                 )
-
                 HadesTextField(
                     value         = phone,
                     onValueChange = { v -> if (v.length <= 10 && v.all { c -> c.isDigit() }) phone = v },
@@ -354,9 +340,8 @@ fun PaymentAtmContent(
                     onValueChange = { v -> if (v.length <= 4 && v.all { c -> c.isDigit() }) pin = v },
                     label         = stringResource(R.string.payment_pin_hint),
                     keyboardType  = KeyboardType.NumberPassword,
-                    isPassword    = true                            // ← fix: parámetro correcto de HadesTextField
+                    isPassword    = true
                 )
-
                 Spacer(Modifier.weight(1f))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HadesButton(
@@ -394,14 +379,13 @@ fun AtmDepositContent(
     val amount     = amountText.toDoubleOrNull() ?: 0.0
     val canSubmit  = phone.length == 10 && phone.startsWith("3") && amount > 0 && !cargando
 
-    HadesBackground {
+    HadesScreen {   // ← HadesBackground + safeDrawingPadding
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Spacer(Modifier.height(48.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = HadesCyan, modifier = Modifier.size(22.dp))
@@ -412,7 +396,7 @@ fun AtmDepositContent(
                     Text(stringResource(R.string.atm_deposit_title), fontSize = 18.sp, fontWeight = FontWeight.Black, color = HadesCyan)
                 }
             }
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
             HadesCardBox {
                 Text("> ${stringResource(R.string.atm_deposit_title)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp, color = HadesCyan)
                 HadesTextField(
@@ -436,7 +420,6 @@ fun AtmDepositContent(
                     cargando     = cargando
                 )
             }
-            Spacer(Modifier.height(48.dp))
         }
     }
 }
@@ -459,14 +442,13 @@ fun WithdrawCodeAtmContent(
     val amount     = amountText.toDoubleOrNull() ?: 0.0
     val canSubmit  = phone.length == 10 && phone.startsWith("3") && code.length == 6 && amount > 0 && !bloqueado && !cargando
 
-    HadesBackground {
+    HadesScreen {   // ← HadesBackground + safeDrawingPadding
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Spacer(Modifier.height(48.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back), tint = HadesOrange, modifier = Modifier.size(22.dp))
@@ -477,7 +459,7 @@ fun WithdrawCodeAtmContent(
                     Text("Retiro con Código", fontSize = 18.sp, fontWeight = FontWeight.Black, color = HadesOrange)
                 }
             }
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(16.dp))
 
             AnimatedVisibility(
                 visible = bloqueado,
@@ -542,7 +524,6 @@ fun WithdrawCodeAtmContent(
                 textAlign = TextAlign.Center,
                 modifier  = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(48.dp))
         }
     }
 }
