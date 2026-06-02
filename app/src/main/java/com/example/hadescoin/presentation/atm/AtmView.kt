@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -110,9 +109,9 @@ fun AtmView(
                     modifier           = Modifier.size(48.dp)
                 )
             },
-            title          = { Text(stringResource(R.string.dialog_success_title), color = HadesCyan) },
-            text           = { Text(mensaje, color = HadesOnDark) },
-            confirmButton  = {
+            title         = { Text(stringResource(R.string.dialog_success_title), color = HadesCyan) },
+            text          = { Text(mensaje, color = HadesOnDark) },
+            confirmButton = {
                 HadesButton(
                     text    = stringResource(R.string.btn_accept),
                     onClick = { showExito = false; navController.popBackStack() }
@@ -140,21 +139,21 @@ fun PaymentAtmContent(
     onBack:    () -> Unit,
     onExecute: (phone: String, amount: Double, reference: String, pin: String) -> Unit
 ) {
-    var paso                  by remember { mutableStateOf(1) }
-    var servicioSeleccionado  by remember { mutableStateOf<ServiceItem?>(null) }
-    var referencia            by remember { mutableStateOf("") }
-    var montoText             by remember { mutableStateOf("") }
-    var phone                 by remember { mutableStateOf("") }
-    var pin                   by remember { mutableStateOf("") }
+    var paso                 by remember { mutableStateOf(1) }
+    var servicioSeleccionado by remember { mutableStateOf<ServiceItem?>(null) }
+    var referencia           by remember { mutableStateOf("") }
+    var montoText            by remember { mutableStateOf("") }
+    var phone                by remember { mutableStateOf("") }
+    var pin                  by remember { mutableStateOf("") }
 
     HadesBackground {
         when (paso) {
             // ── Paso 1: Grid de categorías ──────────────────────────────────
             1 -> LazyVerticalGrid(
-                columns              = GridCells.Fixed(2),
-                verticalArrangement  = Arrangement.spacedBy(12.dp),
+                columns               = GridCells.Fixed(2),
+                verticalArrangement   = Arrangement.spacedBy(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier             = Modifier.fillMaxSize().padding(24.dp)
+                modifier              = Modifier.fillMaxSize().padding(24.dp)
             ) {
                 item(span = { GridItemSpan(2) }) {
                     Column {
@@ -242,7 +241,6 @@ fun PaymentAtmContent(
                     }
                 }
 
-                // Chip del servicio seleccionado
                 servicioSeleccionado?.let { srv ->
                     Box(
                         modifier = Modifier
@@ -276,11 +274,11 @@ fun PaymentAtmContent(
 
                 Spacer(Modifier.weight(1f))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    HadesButton(text = stringResource(R.string.btn_back),     onClick = { paso = 1 }, modifier = Modifier.weight(1f))
+                    HadesButton(text = stringResource(R.string.btn_back), onClick = { paso = 1 }, modifier = Modifier.weight(1f))
                     HadesButton(
-                        text    = stringResource(R.string.btn_continue),
-                        onClick = { paso = 3 },
-                        enabled = referencia.isNotBlank() && (montoText.toDoubleOrNull() ?: 0.0) > 0,
+                        text     = stringResource(R.string.btn_continue),
+                        onClick  = { paso = 3 },
+                        enabled  = referencia.isNotBlank() && (montoText.toDoubleOrNull() ?: 0.0) > 0,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -332,7 +330,7 @@ fun PaymentAtmContent(
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(stringResource(R.string.payment_resumen_monto), fontSize = 10.sp, color = HadesOnDark.copy(alpha = 0.5f))
-                                    Text("$${montoText}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = HadesPurple)
+                                    Text("$$montoText", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = HadesPurple)
                                 }
                             }
                         }
@@ -352,11 +350,11 @@ fun PaymentAtmContent(
                     keyboardType  = KeyboardType.Phone
                 )
                 HadesTextField(
-                    value               = pin,
-                    onValueChange       = { v -> if (v.length <= 4 && v.all { c -> c.isDigit() }) pin = v },
-                    label               = stringResource(R.string.payment_pin_hint),
-                    keyboardType        = KeyboardType.NumberPassword,
-                    visualTransformation = PasswordVisualTransformation()
+                    value         = pin,
+                    onValueChange = { v -> if (v.length <= 4 && v.all { c -> c.isDigit() }) pin = v },
+                    label         = stringResource(R.string.payment_pin_hint),
+                    keyboardType  = KeyboardType.NumberPassword,
+                    isPassword    = true                            // ← fix: parámetro correcto de HadesTextField
                 )
 
                 Spacer(Modifier.weight(1f))
@@ -370,12 +368,10 @@ fun PaymentAtmContent(
                     HadesButton(
                         text         = stringResource(R.string.btn_atm_pay),
                         textCargando = stringResource(R.string.text_loading),
-                        onClick      = {
-                            onExecute(phone, montoText.toDoubleOrNull() ?: 0.0, referencia, pin)
-                        },
-                        enabled  = phone.length == 10 && pin.length == 4 && !cargando,
-                        cargando = cargando,
-                        modifier = Modifier.weight(1f)
+                        onClick      = { onExecute(phone, montoText.toDoubleOrNull() ?: 0.0, referencia, pin) },
+                        enabled      = phone.length == 10 && pin.length == 4 && !cargando,
+                        cargando     = cargando,
+                        modifier     = Modifier.weight(1f)
                     )
                 }
             }
